@@ -1,12 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Get distinct meeting_ids
-    const meetingIdsResult = await pool.query(
-      'SELECT DISTINCT meeting_id FROM zoom_meeting_analytics ORDER BY meeting_id'
-    );
+    const clientName = request.nextUrl.searchParams.get('client_name');
+
+    // Get distinct meeting_ids, optionally filtered by client_name
+    let meetingIdsResult;
+    if (clientName) {
+      meetingIdsResult = await pool.query(
+        'SELECT DISTINCT meeting_id FROM zoom_meeting_analytics WHERE client_name = $1 ORDER BY meeting_id',
+        [clientName]
+      );
+    } else {
+      meetingIdsResult = await pool.query(
+        'SELECT DISTINCT meeting_id FROM zoom_meeting_analytics ORDER BY meeting_id'
+      );
+    }
 
     const meetings = [];
 
@@ -41,6 +51,7 @@ export async function GET() {
           total_size: 0,
           type: r.meeting_type,
           status: r.status,
+          client_name: r.client_name || null,
           recording_files: recordingFiles,
         });
       }

@@ -58,6 +58,7 @@ interface UploadSectionProps {
     selectedRecordingId?: string | null  // Changed from selectedMeetingId
   ) => void;
   isVisible?: boolean;
+  selectedClient?: string | null;
 }
 
 
@@ -65,6 +66,7 @@ interface UploadSectionProps {
 const UploadSection = ({
   onAnalysisStart = () => {},
   isVisible = true,
+  selectedClient = null,
 }: UploadSectionProps) => {
   const [attendanceFile, setAttendanceFile] = useState<File | null>(null);
   const [transcriptFile, setTranscriptFile] = useState<File | null>(null);
@@ -155,7 +157,10 @@ const UploadSection = ({
   // NEW: Fetch Zoom recordings instead of meetings
   const fetchZoomRecordings = async () => {
     try {
-     const response = await fetch(`/api/recordings`, {
+     const url = selectedClient
+       ? `/api/recordings?client_name=${encodeURIComponent(selectedClient)}`
+       : `/api/recordings`;
+     const response = await fetch(url, {
   method: "GET",
   headers: {
     "Content-Type": "application/json",
@@ -314,7 +319,9 @@ const UploadSection = ({
             Upload Zoom Webinar Data
           </CardTitle>
           <CardDescription className="text-muted-foreground text-base">
-            Select a Zoom recording or upload files to analyze engagement and retention patterns.
+            {selectedClient
+              ? `Showing recordings for ${selectedClient}. Select a recording to analyze.`
+              : "Select a Zoom recording or upload files to analyze engagement and retention patterns."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">

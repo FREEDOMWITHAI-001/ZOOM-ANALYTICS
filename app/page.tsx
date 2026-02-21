@@ -2,14 +2,16 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import LandingSection from "@/components/LandingSection";
+import ClientSelector from "@/components/ClientSelector";
 import UploadSection from "@/components/UploadSection";
 import ResultsSection from "@/components/ResultsSection";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const IndexPage = () => {
   const [currentStep, setCurrentStep] = useState<
-    "landing" | "upload" | "results"
+    "landing" | "client-select" | "upload" | "results"
   >("landing");
+  const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [attendanceFile, setAttendanceFile] = useState<File | null>(null);
   const [transcriptFile, setTranscriptFile] = useState<File | null>(null);
   const [comparisonAttendanceFile, setComparisonAttendanceFile] =
@@ -23,6 +25,12 @@ const IndexPage = () => {
 
   // Handle start analysis button click on landing page
   const handleStartAnalysis = () => {
+    setCurrentStep("client-select");
+  };
+
+  // Handle client selection
+  const handleClientSelect = (clientName: string) => {
+    setSelectedClient(clientName);
     setCurrentStep("upload");
   };
 
@@ -315,6 +323,19 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
               </motion.div>
             )}
 
+            {/* Client Selection */}
+            {currentStep === "client-select" && (
+              <motion.div
+                key="client-select"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ClientSelector onClientSelect={handleClientSelect} />
+              </motion.div>
+            )}
+
             {/* Upload Section */}
             {currentStep === "upload" && (
               <motion.div
@@ -327,6 +348,7 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
                 <UploadSection
                   isVisible={currentStep === "upload"}
                   onAnalysisStart={handleAnalysisStart}
+                  selectedClient={selectedClient}
                 />
               </motion.div>
             )}
