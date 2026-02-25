@@ -1,22 +1,25 @@
-import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const result = await pool.query(
-      'SELECT DISTINCT client_name FROM zoom_meeting_analytics WHERE client_name IS NOT NULL ORDER BY client_name'
-    );
+    // Return only the authenticated client's name
+    const clientName = request.headers.get('x-client-name');
 
-    const clients = result.rows.map((row) => row.client_name);
+    if (!clientName) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      clients,
+      clients: [clientName],
     });
   } catch (e: any) {
     return NextResponse.json({
       success: false,
-      error: `Database query failed: ${e.message}`,
+      error: `Failed: ${e.message}`,
     });
   }
 }

@@ -6,14 +6,22 @@ export async function GET(
   { params }: { params: { meetingId: string } }
 ) {
   const meetingId = params.meetingId;
+  const clientName = request.headers.get('x-client-name');
+
+  if (!clientName) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
 
   try {
     const result = await pool.query(
       `SELECT * FROM zoom_meeting_analytics
-       WHERE meeting_id = $1
+       WHERE meeting_id = $1 AND client_name = $2
        ORDER BY generated_at DESC NULLS LAST, id DESC
        LIMIT 1`,
-      [meetingId]
+      [meetingId, clientName]
     );
 
     if (result.rows.length === 0) {

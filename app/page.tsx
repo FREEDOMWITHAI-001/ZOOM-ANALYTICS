@@ -1,16 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import LandingSection from "@/components/LandingSection";
-import ClientSelector from "@/components/ClientSelector";
 import UploadSection from "@/components/UploadSection";
 import ResultsSection from "@/components/ResultsSection";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LogoutButton } from "@/components/LogoutButton";
 
 const IndexPage = () => {
-  const [currentStep, setCurrentStep] = useState<
-    "landing" | "client-select" | "upload" | "results"
-  >("landing");
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<"upload" | "results">(
+    "upload"
+  );
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [attendanceFile, setAttendanceFile] = useState<File | null>(null);
   const [transcriptFile, setTranscriptFile] = useState<File | null>(null);
@@ -20,19 +21,30 @@ const IndexPage = () => {
     useState<File | null>(null);
   const [zoomAnalyticsData, setZoomAnalyticsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(
+    null
+  );
   const [timeInterval, setTimeInterval] = useState<string>("5");
+  const [authLoading, setAuthLoading] = useState(true);
 
-  // Handle start analysis button click on landing page
-  const handleStartAnalysis = () => {
-    setCurrentStep("client-select");
-  };
-
-  // Handle client selection
-  const handleClientSelect = (clientName: string) => {
-    setSelectedClient(clientName);
-    setCurrentStep("upload");
-  };
+  // Check authentication on mount
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.client_name) {
+          setSelectedClient(data.client_name);
+        } else {
+          router.push("/login");
+        }
+      })
+      .catch(() => {
+        router.push("/login");
+      })
+      .finally(() => {
+        setAuthLoading(false);
+      });
+  }, [router]);
 
   // UPDATED: Enhanced handleAnalysisStart function with better transcript handling
   const handleAnalysisStart = async (
@@ -55,8 +67,7 @@ const IndexPage = () => {
         // CRITICAL: Use the analytics-with-insights endpoint
         console.log("STEP 1: Fetching analytics with insights...");
         const insightsResponse = await fetch(
-         `/api/analytics-with-insights/${selectedMeetingId}?interval=${timeInterval}`
-
+          `/api/analytics-with-insights/${selectedMeetingId}?interval=${timeInterval}`
         );
 
         let analyticsData;
@@ -64,19 +75,25 @@ const IndexPage = () => {
         if (insightsResponse.ok) {
           analyticsData = await insightsResponse.json();
           console.log("Analytics with insights received:", analyticsData);
-          console.log("Has engagement_insights?", !!analyticsData.engagement_insights);
+          console.log(
+            "Has engagement_insights?",
+            !!analyticsData.engagement_insights
+          );
           console.log("Peaks from API:", analyticsData.peaks);
           console.log("Dropoffs from API:", analyticsData.dropoffs);
         } else {
           // Fallback to regular analytics
-          console.log("Insights endpoint failed, falling back to regular analytics");
+          console.log(
+            "Insights endpoint failed, falling back to regular analytics"
+          );
           const regularResponse = await fetch(
             `/api/analytics/${selectedMeetingId}?interval=${timeInterval}`
-
           );
 
           if (!regularResponse.ok) {
-            throw new Error(`Analytics API failed: ${regularResponse.status}`);
+            throw new Error(
+              `Analytics API failed: ${regularResponse.status}`
+            );
           }
 
           analyticsData = await regularResponse.json();
@@ -101,7 +118,6 @@ const IndexPage = () => {
           console.log("STEP 2: Fetching transcript separately...");
           const transcriptResponse = await fetch(
             `/api/transcript-direct/${selectedMeetingId}`
-
           );
 
           if (transcriptResponse.ok) {
@@ -115,10 +131,11 @@ const IndexPage = () => {
         setAttendanceFile(null);
         setTranscriptFile(transcriptFile);
         setCurrentStep("results");
-
       } catch (error) {
-        console.error('Error fetching meeting data:', error);
-        alert(`Failed to fetch meeting data: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+        console.error("Error fetching meeting data:", error);
+        alert(
+          `Failed to fetch meeting data: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`
+        );
       } finally {
         setIsLoading(false);
       }
@@ -141,11 +158,15 @@ const IndexPage = () => {
   ) => {
     const intervalNum = parseInt(interval) || 5;
 
-    if (!engagementGraph || !engagementGraph.active_participants || !engagementGraph.labels) {
+    if (
+      !engagementGraph ||
+      !engagementGraph.active_participants ||
+      !engagementGraph.labels
+    ) {
       return {
         peaks: [],
         dropoffs: [],
-        engagement_score: 0
+        engagement_score: 0,
       };
     }
 
@@ -157,40 +178,41 @@ const IndexPage = () => {
 
     // Calculate percentage changes
     for (let i = 1; i < activeParticipants.length; i++) {
-      const prev = activeParticipants[i-1];
+      const prev = activeParticipants[i - 1];
       const curr = activeParticipants[i];
 
       if (prev > 0) {
         const percentageChange = ((curr - prev) / prev) * 100;
 
-       if (percentageChange > 5) {
-  peaks.push({
-    timeInterval: labels[i] || `Time ${i}`,
-    count: curr,
-    percentageChange: Math.round(percentageChange),
-    description: getPeakDescription(peaks.length, labels[i]),
-  });
-}
-else if (percentageChange < -5) {
-  dropoffs.push({
-    timeInterval: labels[i] || `Time ${i}`,
-    count: curr,
-    percentageChange: Math.round(percentageChange),
-    description: getDropoffDescription(dropoffs.length, labels[i]),
-  });
-}
-
+        if (percentageChange > 5) {
+          peaks.push({
+            timeInterval: labels[i] || `Time ${i}`,
+            count: curr,
+            percentageChange: Math.round(percentageChange),
+            description: getPeakDescription(peaks.length, labels[i]),
+          });
+        } else if (percentageChange < -5) {
+          dropoffs.push({
+            timeInterval: labels[i] || `Time ${i}`,
+            count: curr,
+            percentageChange: Math.round(percentageChange),
+            description: getDropoffDescription(dropoffs.length, labels[i]),
+          });
+        }
       }
     }
 
     // Sort and limit to top 5
-   peaks.sort((a, b) => b.percentageChange - a.percentageChange);
-dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
+    peaks.sort((a, b) => b.percentageChange - a.percentageChange);
+    dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
 
     // Calculate engagement score
     const maxActive = Math.max(...activeParticipants);
-    const avgActive = activeParticipants.reduce((a: number, b: number) => a + b, 0) / activeParticipants.length;
-    const engagementScore = maxActive > 0 ? Math.round((avgActive / maxActive) * 100) : 0;
+    const avgActive =
+      activeParticipants.reduce((a: number, b: number) => a + b, 0) /
+      activeParticipants.length;
+    const engagementScore =
+      maxActive > 0 ? Math.round((avgActive / maxActive) * 100) : 0;
 
     return {
       peaks: peaks.slice(0, 5),
@@ -198,7 +220,7 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
       engagement_score: engagementScore,
       total_participants: totalParticipants,
       max_active: maxActive,
-      avg_active: Math.round(avgActive)
+      avg_active: Math.round(avgActive),
     };
   };
 
@@ -209,7 +231,7 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
       `Participant increase at ${time} - possibly Q&A session`,
       `Attention boost at ${time} - key content delivered`,
       `Retention peak at ${time} - audience engaged`,
-      `Viewer surge at ${time} - scheduled joiners arrived`
+      `Viewer surge at ${time} - scheduled joiners arrived`,
     ];
     return descriptions[Math.min(index, descriptions.length - 1)];
   };
@@ -220,7 +242,7 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
       `Audience decline at ${time} - content transition`,
       `Engagement dip at ${time} - complex topic`,
       `Participant decrease at ${time} - break time`,
-      `Attention drop at ${time} - lengthy explanation`
+      `Attention drop at ${time} - lengthy explanation`,
     ];
     return descriptions[Math.min(index, descriptions.length - 1)];
   };
@@ -231,37 +253,36 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
 
     // If we're viewing Zoom meeting results, refetch with new interval
     if (selectedMeetingId && !attendanceFile) {
-      // Don't show the full-page loading overlay for interval changes
-      // Instead, the ResultsSection will handle showing a small loader in the graph section
-
-      // Make API call but don't trigger full-page loading
-      fetch(`/api/analytics-with-insights/${selectedMeetingId}?interval=${newInterval}`)
-
-        .then(response => {
+      fetch(
+        `/api/analytics-with-insights/${selectedMeetingId}?interval=${newInterval}`
+      )
+        .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
           }
           return response.json();
         })
-        .then(data => {
+        .then((data) => {
           console.log("Refetched data with new interval:", data);
           setZoomAnalyticsData(data);
         })
-        .catch(error => {
-          console.error('Error refetching analytics:', error);
+        .catch((error) => {
+          console.error("Error refetching analytics:", error);
 
           // Fallback to regular analytics
-          fetch(`/api/analytics/${selectedMeetingId}?interval=${newInterval}`)
-
-            .then(response => response.json())
-            .then(fallbackData => {
+          fetch(
+            `/api/analytics/${selectedMeetingId}?interval=${newInterval}`
+          )
+            .then((response) => response.json())
+            .then((fallbackData) => {
               // Calculate insights from fallback data
               if (fallbackData.engagement_graph) {
-                const calculatedInsights = calculateInsightsFromEngagementData(
-                  fallbackData.engagement_graph,
-                  newInterval,
-                  fallbackData.total_participants || 0
-                );
+                const calculatedInsights =
+                  calculateInsightsFromEngagementData(
+                    fallbackData.engagement_graph,
+                    newInterval,
+                    fallbackData.total_participants || 0
+                  );
                 fallbackData.engagement_insights = calculatedInsights;
                 fallbackData.peaks = calculatedInsights.peaks;
                 fallbackData.dropoffs = calculatedInsights.dropoffs;
@@ -269,7 +290,9 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
               setZoomAnalyticsData(fallbackData);
             })
             .catch(() => {
-              console.error("Failed to fetch analytics with new interval");
+              console.error(
+                "Failed to fetch analytics with new interval"
+              );
             });
         });
     }
@@ -278,7 +301,7 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
   // Handle comparison file uploads
   const handleComparisonUpload = (
     attendanceFile: File | null,
-    transcriptFile: File | null,
+    transcriptFile: File | null
   ) => {
     setComparisonAttendanceFile(attendanceFile);
     setComparisonTranscriptFile(transcriptFile);
@@ -287,14 +310,21 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
   // Handle export results
   const handleExportResults = () => {
     console.log("Exporting results...");
-    // Implementation would go here
   };
 
   // Handle share results
   const handleShareResults = () => {
     console.log("Sharing results...");
-    // Implementation would go here
   };
+
+  // Show nothing while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-4 border-t-transparent border-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
@@ -303,39 +333,16 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
             Zoom Webinar Attendance Analyzer
           </h1>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            {selectedClient && <LogoutButton clientName={selectedClient} />}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <AnimatePresence mode="wait">
-            {/* Landing Section */}
-            {currentStep === "landing" && (
-              <motion.div
-                key="landing"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <LandingSection onStartAnalysis={handleStartAnalysis} />
-              </motion.div>
-            )}
-
-            {/* Client Selection */}
-            {currentStep === "client-select" && (
-              <motion.div
-                key="client-select"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ClientSelector onClientSelect={handleClientSelect} />
-              </motion.div>
-            )}
-
             {/* Upload Section */}
             {currentStep === "upload" && (
               <motion.div
@@ -373,7 +380,7 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
                   onShareResults={handleShareResults}
                   onComparisonUpload={handleComparisonUpload}
                   onReanalyze={() => setCurrentStep("upload")}
-                  selectedMeetingId={selectedMeetingId} // CRITICAL: This must be passed!
+                  selectedMeetingId={selectedMeetingId}
                 />
               </motion.div>
             )}
@@ -386,13 +393,25 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
         <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50">
           <div className="text-center bg-white p-6 rounded-lg shadow-lg">
             <div className="h-8 w-8 rounded-full border-4 border-t-transparent border-primary animate-spin mx-auto mb-4"></div>
-            <p className="text-lg font-medium">Analyzing Zoom Meeting Data</p>
-            <p className="text-sm text-gray-600 mt-2">Meeting ID: {selectedMeetingId}</p>
+            <p className="text-lg font-medium">
+              Analyzing Zoom Meeting Data
+            </p>
+            <p className="text-sm text-gray-600 mt-2">
+              Meeting ID: {selectedMeetingId}
+            </p>
             <div className="mt-3 space-y-1">
-              <p className="text-xs text-gray-500">• Fetching participant data...</p>
-              <p className="text-xs text-gray-500">• Calculating engagement metrics...</p>
-              <p className="text-xs text-gray-500">• Generating insights and peaks/dropoffs...</p>
-              <p className="text-xs text-gray-500">• Loading transcript (if available)...</p>
+              <p className="text-xs text-gray-500">
+                Fetching participant data...
+              </p>
+              <p className="text-xs text-gray-500">
+                Calculating engagement metrics...
+              </p>
+              <p className="text-xs text-gray-500">
+                Generating insights and peaks/dropoffs...
+              </p>
+              <p className="text-xs text-gray-500">
+                Loading transcript (if available)...
+              </p>
             </div>
           </div>
         </div>
@@ -402,7 +421,6 @@ dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-muted-foreground">
             Zoom Webinar Attendance Analyzer - Analyze participant engagement
-            without login
           </p>
         </div>
       </footer>

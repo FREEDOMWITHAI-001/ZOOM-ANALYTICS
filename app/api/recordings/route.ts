@@ -3,20 +3,20 @@ import pool from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const clientName = request.nextUrl.searchParams.get('client_name');
+    // Force client_name from JWT (injected by middleware)
+    const clientName = request.headers.get('x-client-name');
 
-    // Get distinct meeting_ids, optionally filtered by client_name
-    let meetingIdsResult;
-    if (clientName) {
-      meetingIdsResult = await pool.query(
-        'SELECT DISTINCT meeting_id FROM zoom_meeting_analytics WHERE client_name = $1 ORDER BY meeting_id',
-        [clientName]
-      );
-    } else {
-      meetingIdsResult = await pool.query(
-        'SELECT DISTINCT meeting_id FROM zoom_meeting_analytics ORDER BY meeting_id'
+    if (!clientName) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
       );
     }
+
+    const meetingIdsResult = await pool.query(
+      'SELECT DISTINCT meeting_id FROM zoom_meeting_analytics WHERE client_name = $1 ORDER BY meeting_id',
+      [clientName]
+    );
 
     const meetings = [];
 
@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
       // Fetch latest record per meeting
       const latestResult = await pool.query(
         `SELECT * FROM zoom_meeting_analytics
-         WHERE meeting_id = $1
+         WHERE meeting_id = $1 AND client_name = $2
          ORDER BY generated_at DESC NULLS LAST, id DESC
          LIMIT 1`,
-        [meetingId]
+        [meetingId, clientName]
       );
 
       if (latestResult.rows.length > 0) {
