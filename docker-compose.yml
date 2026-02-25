@@ -2,7 +2,7 @@ services:
   zoom-analytics:
     build: .
     ports:
-      - "3005:3000"
+      - "8020:8020"
     environment:
       - DB_HOST=140.245.206.162
       - DB_PORT=5432
