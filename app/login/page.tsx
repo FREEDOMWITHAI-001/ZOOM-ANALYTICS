@@ -42,7 +42,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/");
+      router.push(data.role === "admin" ? "/admin" : "/");
       router.refresh();
     } catch {
       setError("Network error. Please try again.");
