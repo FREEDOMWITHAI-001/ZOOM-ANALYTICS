@@ -10,8 +10,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const role = request.headers.get('x-client-role') || 'user';
+
   return NextResponse.json({
     authenticated: true,
     client_name: clientName,
+    role,
   });
 }

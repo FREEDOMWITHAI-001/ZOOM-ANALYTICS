@@ -7,6 +7,10 @@ function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
+function isAdminPath(pathname: string) {
+  return pathname === '/admin' || pathname.startsWith('/admin/') || pathname.startsWith('/api/admin/');
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -32,9 +36,18 @@ export async function middleware(request: NextRequest) {
     return handleUnauthenticated(request, pathname);
   }
 
-  // Inject client name header for API routes
+  // Admin routes require admin role
+  if (isAdminPath(pathname) && payload.role !== 'admin') {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // Inject client name and role headers for API routes
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-client-name', payload.client_name);
+  requestHeaders.set('x-client-role', payload.role || 'user');
 
   return NextResponse.next({
     request: { headers: requestHeaders },

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await pool.query(
-      'SELECT password_hash FROM client_credentials WHERE client_name = $1 AND is_active = true',
+      'SELECT password_hash, role FROM client_credentials WHERE client_name = $1 AND is_active = true',
       [client_name]
     );
 
@@ -35,11 +35,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = await signToken(client_name);
+    const role = result.rows[0].role || 'user';
+    const token = await signToken(client_name, role);
 
     const response = NextResponse.json({
       success: true,
       client_name,
+      role,
     });
 
     const isSecure = request.headers.get('x-forwarded-proto') === 'https' ||

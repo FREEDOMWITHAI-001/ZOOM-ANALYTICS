@@ -8,8 +8,8 @@ const getSecret = () => {
   return new TextEncoder().encode(secret);
 };
 
-export async function signToken(clientName: string): Promise<string> {
-  return new SignJWT({ client_name: clientName })
+export async function signToken(clientName: string, role = 'user'): Promise<string> {
+  return new SignJWT({ client_name: clientName, role })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('8h')
@@ -18,10 +18,10 @@ export async function signToken(clientName: string): Promise<string> {
 
 export async function verifyToken(
   token: string
-): Promise<{ client_name: string } | null> {
+): Promise<{ client_name: string; role: string } | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
-    return payload as { client_name: string };
+    return payload as { client_name: string; role: string };
   } catch {
     return null;
   }

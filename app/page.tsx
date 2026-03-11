@@ -26,6 +26,7 @@ const IndexPage = () => {
   );
   const [timeInterval, setTimeInterval] = useState<string>("5");
   const [authLoading, setAuthLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string>('user');
 
   // Check authentication on mount
   useEffect(() => {
@@ -34,6 +35,7 @@ const IndexPage = () => {
       .then((data) => {
         if (data.authenticated && data.client_name) {
           setSelectedClient(data.client_name);
+          setUserRole(data.role || 'user');
         } else {
           router.push("/login");
         }
@@ -334,6 +336,14 @@ const IndexPage = () => {
             Zoom Webinar Attendance Analyzer
           </h1>
           <div className="flex items-center gap-2">
+            {userRole === 'admin' && (
+              <button
+                onClick={() => router.push('/admin')}
+                className="text-xs px-2.5 py-1 rounded-md bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-600/30 transition-colors font-medium"
+              >
+                Admin
+              </button>
+            )}
             {selectedClient && <LogoutButton clientName={selectedClient} />}
             <ThemeToggle />
           </div>
