@@ -34,6 +34,11 @@ const IndexPage = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.authenticated && data.client_name) {
+          // Admin users should be on /admin, not here
+          if (data.role === 'admin') {
+            router.push('/admin');
+            return;
+          }
           setSelectedClient(data.client_name);
           setUserRole(data.role || 'user');
         } else {
@@ -336,14 +341,6 @@ const IndexPage = () => {
             Zoom Webinar Attendance Analyzer
           </h1>
           <div className="flex items-center gap-2">
-            {userRole === 'admin' && (
-              <button
-                onClick={() => router.push('/admin')}
-                className="text-xs px-2.5 py-1 rounded-md bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-600/30 transition-colors font-medium"
-              >
-                Admin
-              </button>
-            )}
             {selectedClient && <LogoutButton clientName={selectedClient} />}
             <ThemeToggle />
           </div>

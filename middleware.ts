@@ -41,7 +41,12 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  // Admin users should go to /admin, not the main upload page
+  if (pathname === '/' && payload.role === 'admin') {
+    return NextResponse.redirect(new URL('/admin', request.url));
   }
 
   // Inject client name and role headers for API routes

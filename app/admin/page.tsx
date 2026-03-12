@@ -215,12 +215,6 @@ export default function AdminPage() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push('/')}
-              className="text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800"
-            >
-              ← Back to App
-            </button>
-            <button
               onClick={handleLogout}
               className="text-sm text-red-400 hover:text-red-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800"
             >
