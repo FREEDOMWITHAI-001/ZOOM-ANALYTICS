@@ -58,6 +58,15 @@ export async function GET(
       );
     }
 
+    // Load template from DB if an admin has edited it, otherwise use bundled file
+    let overrideBase: object | undefined;
+    try {
+      const tpl = await pool.query(
+        "SELECT value FROM system_settings WHERE key = 'workflow_template'"
+      );
+      if (tpl.rows.length > 0) overrideBase = JSON.parse(tpl.rows[0].value);
+    } catch { /* fall back to bundled */ }
+
     const workflow = generateWorkflowJSON({
       clientName: row.client_name,
       dbClientName: row.db_client_name || row.client_name,
@@ -69,7 +78,7 @@ export async function GET(
       ghlLocationId: row.ghl_location_id,
       aiProvider: row.ai_provider || 'openai',
       aiApiKey: row.ai_api_key || '',
-    });
+    }, overrideBase);
 
     const fileName = `${row.client_name.replace(/\s+/g, '_')}_n8n_workflow.json`;
 

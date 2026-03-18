@@ -40,8 +40,8 @@ function buildZoomBearer(clientId: string, clientSecret: string): string {
  * Generates a ready-to-import n8n workflow JSON pre-filled with
  * the given client's credentials.
  */
-export function generateWorkflowJSON(config: WorkflowConfig): object {
-  const workflow = deepClone(baseWorkflow) as any;
+export function generateWorkflowJSON(config: WorkflowConfig, overrideBase?: object): object {
+  const workflow = deepClone(overrideBase ?? baseWorkflow) as any;
 
   const webhookId = generateUUID();
 
