@@ -1,0 +1,2294 @@
+{
+  "name": "Zoom Analytics Support - Clean",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/upsert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={   \n\"locationId\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_location\"] }}\",\n\"email\":\"{{ $item(\"0\").$node[\"Edit Fields3\"].json[\"participant_mail\"] }}\",\n\"customFields\": [     \n{\n\"key\": \"leave_remainder_meeting_id\",       \n\"value\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}\"\n},     \n{       \n\"key\": \"leave_remainder_meeting_name\",\n\"value\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_name\"] }}\"\n}, {\n\"key\": \"leave_remainder_meeting_link\",\n\"value\": \"{{ $item(\"0\").$node[\"Get Webinar Details\"].json[\"join_url\"] }}\"\n}   \n] }  ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -416,
+        1472
+      ],
+      "id": "5a5eb53a-a459-4d7b-9371-02708656aada",
+      "name": "meet_leave_reminder1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/upsert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={   \n\"locationId\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_location\"] }}\",\n\"email\":\"{{ $item(\"0\").$node[\"Edit Fields2\"].json[\"participant_mail\"] }}\",\n\"customFields\": [     \n{\n\"key\": \"leave_remainder_meeting_id\",       \n\"value\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}\"\n},     \n{       \n\"key\": \"leave_remainder_meeting_name\",\n\"value\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_name\"] }}\"\n}, {\n\"key\": \"leave_remainder_meeting_link\",\n\"value\": \"{{ $item(\"0\").$node[\"Get Meeting Details\"].json[\"join_url\"] }}\"\n}   \n] }  ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -416,
+        1280
+      ],
+      "id": "1e4f8084-026b-47ed-8a08-88166e7061e2",
+      "name": "meet_leave_reminder"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.contact_id }}/notes",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"userId\": \"{{ $json.contact_id }}\", \"body\": \"Follow up on Zoom meeting attendance.\\n\\nMeeting ID: {{ $item(0).$node['server oauth']?.json?.meeting_id ?? '' }} \\nMeeting/Webinar Title: {{ $item(0).$node['server oauth']?.json?.meeting_name ?? '' }}\\nDate and time: {{ $json.time ?? '' }}\\nDuration: {{ ($('Code in JavaScript').item.json?.user_time_report ?? [])[$itemIndex]?.total_minutes ?? 0 }} min\\nNumber of rejoins: {{ ($('Code in JavaScript').item.json?.user_time_report ?? [])[$itemIndex]?.rejoins ?? 0 }}\\n\" }",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 90,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1152,
+        832
+      ],
+      "id": "9ba899c8-882d-4e83-a684-cd6b9d121e81",
+      "name": "notes update1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"firstName\": \"{{ $json['first_name'] }}\",\n  \"lastName\": \"{{ $json['last_name'] }}\",\n  \"email\": \"{{ $json['user_email'] }}\",\n  \"phone\": \"{{ $json['phone'] }}\",\n  \"locationId\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_location\"] }}\",\n  \"customFields\": [\n    {\n      \"id\": \"last_live_call_attended_duration\",\n      \"value\": \"{{ $json['total_minutes'] }}\"\n    },\n    {\n      \"id\": \"last_live_call_id\",\n      \"value\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}\"\n    },\n    {\n      \"id\": \"last_live_call_title\",\n      \"value\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_name\"] }}\"\n    },\n    {\n      \"id\":\"last_live_call_attended_date\",\n      \"value\":\"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_webinar_date\"] }}\"\n    }\n  ]\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 90,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        480,
+        832
+      ],
+      "id": "e01d9460-8701-487b-881d-4f254ee78900",
+      "name": "custom field update1",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"firstName\": \"{{ $('Split Out3').item.json.first_name }}\",\n  \"lastName\": \"{{ $('Split Out3').item.json.last_name }}\",\n  \"email\": \"{{ $('Split Out3').item.json.user_email }}\",\n  \"phone\": \"{{ $('Split Out3').item.json.phone }}\",\n  \"locationId\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_location\"] }}\",\n  \"customFields\": [\n    {\n      \"id\": \"last_webinar_attended_duration\",\n      \"value\": \"{{ $('Split Out3').item.json.total_minutes }}\"\n    },\n    {\n      \"id\": \"last_webinar_id\",\n      \"value\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}\"\n    },\n    {\n      \"id\": \"last_webinar_title\",\n      \"value\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_name\"] }}\"\n    },\n    {\n      \"id\":\"last_webinar_attended_date\",\n      \"value\":\"{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_webinar_date\"] }}\"\n    }\n  ]\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 90,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        480,
+        448
+      ],
+      "id": "c4267713-8137-4d97-9b12-d7134a674e25",
+      "name": "custom field update",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.contact_id }}/notes",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"userId\": \"{{ $json.contact_id }}\", \"body\": \"Follow up on Zoom meeting attendance.\\n\\nMeeting ID: {{ $item(0).$node['server oauth']?.json?.meeting_id ?? '' }} \\nMeeting/Webinar Title: {{ $item(0).$node['server oauth']?.json?.meeting_name ?? '' }}\\nDate and time: {{ $json.time ?? '' }}\\nDuration: {{ ($('Code in JavaScript4').item.json?.user_time_report ?? [])[$itemIndex]?.total_minutes ?? 0 }} min\\nNumber of rejoins: {{ ($('Code in JavaScript4').item.json?.user_time_report ?? [])[$itemIndex]?.rejoins ?? 0 }}\\n\" }",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1152,
+        448
+      ],
+      "id": "72eed472-aac5-48f6-8dbb-c97021473800",
+      "name": "notes update",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email\": \"{{ $json['user_email'] }}\",\n  \"locationId\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_location\"] }}\",\n  \"customFields\": [\n    {\n      \"id\": \"attendee_or_not\",\n      \"value\": \"attendee\"\n    }\n  ]\n}\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 90,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        480,
+        256
+      ],
+      "id": "0f00e024-c8d2-45f2-9de5-7060c264cf83",
+      "name": "update contact field attendee3",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "alwaysOutputData": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact.id}}/tags",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"tags\": [\n    \"attendee\"\n  ]\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchInterval": 10000
+            }
+          },
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        928,
+        256
+      ],
+      "id": "26e5cc81-b19c-4d6f-a7fb-80df01f0fe78",
+      "name": "save attendee tag3",
+      "retryOnFail": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        256
+      ],
+      "id": "2b9885cd-8fb8-4a08-b3fc-5264abde62ee",
+      "name": "Wait7",
+      "webhookId": "56b3a7db-dd9b-4788-8326-3d9acd423437",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"email\": \"{{ $json['user_email'] }}\",\n  \"locationId\": \"{{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_location\"] }}\",\n  \"customFields\": [\n    {\n      \"id\": \"attendee_or_not\",\n      \"value\": \"attendee\"\n    }\n  ]\n}\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 90,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        480,
+        1024
+      ],
+      "id": "b8df5037-1168-4579-82d4-becde3a99a72",
+      "name": "update contact field attendee2",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$json.contact.id}}/tags",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $item(\"0\").$node[\"server oauth\"].json[\"ghl_token\"] }}"
+            },
+            {
+              "name": "version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"tags\": [\n    \"attendee\"\n  ]\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 90,
+              "batchInterval": 10000
+            }
+          },
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        928,
+        1024
+      ],
+      "id": "a0b75ae6-58a1-4d0b-be15-d631814cee31",
+      "name": "save attendee tag2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        1024
+      ],
+      "id": "447365e3-a3fc-4308-a9d9-03a310056304",
+      "name": "Wait6",
+      "webhookId": "ba1eee8e-5dab-4fd9-9b48-153857efe729",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "amount": 15,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        832
+      ],
+      "id": "0615f8e8-1320-46ed-8d01-b03021272356",
+      "name": "Wait5",
+      "webhookId": "3ecf464c-2431-4f93-b314-144daef0823a"
+    },
+    {
+      "parameters": {
+        "amount": 15,
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        448
+      ],
+      "id": "b434373e-4833-4428-8c1d-444ca9f647ec",
+      "name": "Wait4",
+      "webhookId": "891d2c0e-56f0-4535-9aaa-211fa2aace29"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "user_time_report",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        256,
+        352
+      ],
+      "id": "ad3121b9-8d48-4e27-be87-23625c125fc2",
+      "name": "Split Out3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ---- Step 1: merge all participants from all pages ----\nconst merged = [];\n\nfor (const item of $input.all()) {\n  const page = item.json;\n  if (Array.isArray(page.participants)) {\n    merged.push(...page.participants);\n  }\n}\n\n// Optional: debug\n// console.log('Merged length:', merged.length);\n// console.log('Merged participants:', JSON.stringify(merged, null, 2));\n\n// ---- Step 2: aggregate time & rejoins per user ----\nconst userTime = {}; // { key: { totalMinutes, name, phone, sessions, email, participantId, rejoins } }\nconst seenEmails = new Set(); // To track rejoin counts\n\nmerged.forEach((p, index) => {\n  // If no duration AND no join/leave time, skip\n  if (!p.join_time && typeof p.duration !== 'number') return;\n\n  // Skip user if no email\n  if (!p.user_email || !p.user_email.trim()) return;\n\n  // Build a very safe unique key based on email\n  const key = p.user_email.trim().toLowerCase();\n\n  if (!key) return;\n\n  let diffMin;\n\n  // Zoom duration is in seconds in your logs\n  if (typeof p.duration === 'number') {\n    diffMin = p.duration / 60;\n  } else {\n    const join = new Date(p.join_time);\n    const leave = new Date(p.leave_time);\n    if (isNaN(join) || isNaN(leave)) return;\n    const diffMs = leave - join;\n    diffMin = diffMs / 1000 / 60;\n  }\n\n  if (!userTime[key]) {\n    userTime[key] = {\n      totalMinutes: 0,\n      name: p.name || '',\n      phone: p.phone || '',\n      sessions: 0,\n      email: key,\n      participantId: p.participant_user_id || p.id || p.user_id || '',\n      rejoins: 0, // Initialize rejoins\n    };\n  }\n\n  // Increment rejoin count if the email has been seen before\n  if (seenEmails.has(key)) {\n    userTime[key].rejoins += 1;\n  } else {\n    seenEmails.add(key);\n  }\n\n  userTime[key].totalMinutes += diffMin;\n  userTime[key].sessions += 1;\n});\n\n// ---- Step 3: create result array ----\nconst result = Object.entries(userTime).map(([key, data]) => {\n  const nameParts = (data.name || '').trim().split(/\\s+/);\n  const firstName = nameParts[0] || '';\n  const lastName = nameParts.slice(1).join(' ') || '';\n\n  return {\n    user_email: data.email || '',                       // may be empty\n    first_name: firstName || '',\n    last_name: lastName || '',\n    phone: data.phone || '',\n    total_minutes: Math.max(1, Math.round(data.totalMinutes)),\n    rejoins: Math.max(0, data.rejoins),\n    participant_id: data.participantId || key,\n  };\n});\n\n// ---- Step 4: add totals ----\nconst totalUsers = result.length;\n\nreturn [\n  {\n    json: {\n      total_users: totalUsers,\n      user_time_report: result,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        352
+      ],
+      "id": "ecad7f0e-c901-4a36-9e25-e07cd5b7a917",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "user_time_report",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        256,
+        928
+      ],
+      "id": "d739b534-59d9-4c8b-b856-3ef300459cb9",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ---- Step 1: merge all participants from all pages ----\nconst merged = [];\n\nfor (const item of $input.all()) {\n  const page = item.json;\n  if (Array.isArray(page.participants)) {\n    merged.push(...page.participants);\n  }\n}\n\n// Optional: debug\n// console.log('Merged length:', merged.length);\n// console.log('Merged participants:', JSON.stringify(merged, null, 2));\n\n// ---- Step 2: aggregate time & rejoins per user ----\nconst userTime = {}; // { key: { totalMinutes, name, phone, sessions, email, participantId } }\n\nmerged.forEach((p, index) => {\n  // If no duration AND no join/leave time, skip\n  if (!p.join_time && typeof p.duration !== 'number') return;\n\n  // Skip user if no email\n  if (!p.user_email || !p.user_email.trim()) return;\n\n  // Build a very safe unique key\n  const key =\n    (p.participant_user_id && String(p.participant_user_id)) ||\n    (p.id && String(p.id)) ||\n    (p.user_id && String(p.user_id)) ||         // <- extra fallback\n    (p.user_email && String(p.user_email.trim().toLowerCase())) || // <- check for email\n    `idx_${index}`;                             // <- last resort fallback\n\n  if (!key) return;\n\n  let diffMin;\n\n  // Zoom duration is in seconds in your logs\n  if (typeof p.duration === 'number') {\n    diffMin = p.duration / 60;\n  } else {\n    const join = new Date(p.join_time);\n    const leave = new Date(p.leave_time);\n    if (isNaN(join) || isNaN(leave)) return;\n    const diffMs = leave - join;\n    diffMin = diffMs / 1000 / 60;\n  }\n\n  if (!userTime[key]) {\n    userTime[key] = {\n      totalMinutes: 0,\n      name: p.name || '',\n      phone: p.phone || '',\n      sessions: 0,\n      email: (p.user_email || '').trim().toLowerCase(),\n      participantId: p.participant_user_id || p.id || p.user_id || '',\n    };\n  }\n\n  userTime[key].totalMinutes += diffMin;\n  userTime[key].sessions += 1;\n});\n\n// ---- Step 3: create result array ----\nconst result = Object.entries(userTime).map(([key, data]) => {\n  const nameParts = (data.name || '').trim().split(/\\s+/);\n  const firstName = nameParts[0] || '';\n  const lastName = nameParts.slice(1).join(' ') || '';\n\n  return {\n    user_email: data.email || '',                       // may be empty\n    first_name: firstName || '',\n    last_name: lastName || '',\n    phone: data.phone || '',\n    total_minutes: Math.max(1, Math.round(data.totalMinutes)),\n    rejoins: Math.max(0, data.sessions - 1),\n    participant_id: data.participantId || key,\n  };\n});\n\n// ---- Step 4: add totals ----\nconst totalUsers = result.length;\n\nreturn [\n  {\n    json: {\n      total_users: totalUsers,\n      user_time_report: result,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        928
+      ],
+      "id": "873c6d85-bd6d-45e5-9aeb-d157fbaa46f7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"plainToken\"] }}",
+        "secret": "=8HcNDvSjTFCFxhFkzxBMYw"
+      },
+      "id": "bd8d4862-4909-47ad-8199-86c5ee0af895",
+      "name": "Crypto",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -1664,
+        256
+      ],
+      "notes": "HMAC SHA256 for Zoom URL validation"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =====================================================\n// Calculate Engagement Analytics (RAW MINUTE LEVEL)\n// No 5-minute bucketing. Frontend handles windows.\n// =====================================================\n\n// Step 1: Merge all participants\nconst allParticipants = [];\nfor (const item of $input.all()) {\n  const page = item.json;\n  if (Array.isArray(page.participants)) {\n    allParticipants.push(...page.participants);\n  }\n}\n\nif (allParticipants.length === 0) {\n  return [{\n    json: {\n      success: false,\n      error: \"No participant data available\",\n      meeting_id: $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"],\n      meeting_name: $item(\"0\").$node[\"server oauth\"].json[\"meeting_name\"],\n      meeting_type: $item(\"0\").$node[\"server oauth\"].json[\"meeting_type\"],\n      interval_minutes: 1,\n      meeting_duration_minutes: 0,\n      meeting_start_time: null,\n      meeting_end_time: null,\n      total_unique_participants: 0,\n      total_participant_records: 0,\n      average_participation_minutes: 0,\n      max_participation_minutes: 0,\n      min_participation_minutes: 0,\n      engagement_score: 0,\n      average_retention: 0,\n      peak_concurrent_users: 0,\n      final_active_users: 0,\n      total_joined: 0,\n      total_left: 0,\n      engagement_graph: {\n        granularity: \"minute\",\n        granularity_minutes: 1,\n        labels: [],\n        timestamps: [],\n        active_participants: [],\n        users_joined: [],\n        users_left: []\n      },\n      user_time_report: []\n    }\n  }];\n}\n\n// Step 2: Find meeting bounds\nlet minJoin = null;\nlet maxLeave = null;\n\nfor (const p of allParticipants) {\n  try {\n    if (!p.join_time || !p.leave_time) continue;\n    const join = new Date(p.join_time);\n    const leave = new Date(p.leave_time);\n    if (isNaN(join.getTime()) || isNaN(leave.getTime())) continue;\n    if (leave <= join) continue;\n    if (!minJoin || join < minJoin) minJoin = join;\n    if (!maxLeave || leave > maxLeave) maxLeave = leave;\n  } catch (e) {}\n}\n\nif (!minJoin || !maxLeave) {\n  return [{\n    json: {\n      success: false,\n      error: \"Could not determine meeting duration\",\n      meeting_id: $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"]\n    }\n  }];\n}\n\nconst meetingDurationMs = maxLeave.getTime() - minJoin.getTime();\nconst meetingDurationMinutes = Math.max(Math.ceil(meetingDurationMs / 60000), 1);\n\n// Step 3: Build minute-level labels and timestamps\nconst labels = [];\nconst timestamps = [];\nfor (let i = 0; i < meetingDurationMinutes; i++) {\n  const hh = String(Math.floor(i / 60)).padStart(2, \"0\");\n  const mm = String(i % 60).padStart(2, \"0\");\n  labels.push(`${hh}:${mm}`);\n  timestamps.push(new Date(minJoin.getTime() + i * 60000).toISOString());\n}\n\n// Step 4: Minute-by-minute tracking\nconst activeUsersPerMinute = new Array(meetingDurationMinutes).fill(0);\nconst joinedPerMinute = new Array(meetingDurationMinutes).fill(0);\nconst leftPerMinute = new Array(meetingDurationMinutes).fill(0);\n\nconst userTimeMap = {};\nlet totalDurationSec = 0;\nlet maxDurationSec = 0;\nlet minDurationSec = Infinity;\n\nfor (const p of allParticipants) {\n  try {\n    if (!p.join_time || !p.leave_time) continue;\n    const joinTime = new Date(p.join_time);\n    const leaveTime = new Date(p.leave_time);\n    if (isNaN(joinTime.getTime()) || isNaN(leaveTime.getTime())) continue;\n    if (leaveTime <= joinTime) continue;\n\n    const rawDurationSec =\n      typeof p.duration === \"number\" && p.duration > 0\n        ? p.duration\n        : Math.round((leaveTime.getTime() - joinTime.getTime()) / 1000);\n\n    totalDurationSec += rawDurationSec;\n    if (rawDurationSec > maxDurationSec) maxDurationSec = rawDurationSec;\n    if (rawDurationSec < minDurationSec) minDurationSec = rawDurationSec;\n\n    const startMinute = Math.max(\n      0,\n      Math.min(\n        meetingDurationMinutes - 1,\n        Math.floor((joinTime.getTime() - minJoin.getTime()) / 60000)\n      )\n    );\n    const endMinuteExclusive = Math.max(\n      startMinute + 1,\n      Math.min(\n        meetingDurationMinutes,\n        Math.ceil((leaveTime.getTime() - minJoin.getTime()) / 60000)\n      )\n    );\n\n    joinedPerMinute[startMinute]++;\n    leftPerMinute[Math.min(endMinuteExclusive - 1, meetingDurationMinutes - 1)]++;\n\n    for (let minute = startMinute; minute < endMinuteExclusive; minute++) {\n      activeUsersPerMinute[minute]++;\n    }\n\n    // User time aggregation\n    const email = (p.user_email || \"\").trim().toLowerCase();\n    if (!email) continue;\n\n    if (!userTimeMap[email]) {\n      const nameParts = (p.name || \"\").trim().split(/\\s+/);\n      userTimeMap[email] = {\n        user_email: email,\n        first_name: nameParts[0] || \"\",\n        last_name: nameParts.slice(1).join(\" \") || \"\",\n        phone: p.phone || \"\",\n        total_minutes: 0,\n        rejoins: 0,\n        sessions: 0,\n        participant_id: p.participant_user_id || p.id || p.user_id || \"\",\n        attentiveness_score: p.attentiveness_score || \"\"\n      };\n    }\n    userTimeMap[email].total_minutes += rawDurationSec / 60;\n    userTimeMap[email].sessions += 1;\n    userTimeMap[email].rejoins = Math.max(0, userTimeMap[email].sessions - 1);\n\n  } catch (e) {}\n}\n\n// Step 5: Summary stats\nconst peakConcurrent = activeUsersPerMinute.length ? Math.max(...activeUsersPerMinute) : 0;\nconst finalActiveUsers = activeUsersPerMinute[activeUsersPerMinute.length - 1] || 0;\nconst totalJoined = joinedPerMinute.reduce((a, b) => a + b, 0);\nconst totalLeft = leftPerMinute.reduce((a, b) => a + b, 0);\nconst totalUniqueParticipants = Object.keys(userTimeMap).length;\n\nconst averageActive = activeUsersPerMinute.length\n  ? activeUsersPerMinute.reduce((a, b) => a + b, 0) / activeUsersPerMinute.length\n  : 0;\n\nconst engagementScore = peakConcurrent > 0\n  ? Math.round((averageActive / peakConcurrent) * 10000) / 100\n  : 0;\n\nconst averageRetention = totalUniqueParticipants > 0\n  ? Math.round((averageActive / totalUniqueParticipants) * 10000) / 100\n  : 0;\n\nconst avgDurationMin = allParticipants.length > 0\n  ? Math.round((totalDurationSec / allParticipants.length / 60) * 100) / 100\n  : 0;\n\n// Step 6: User time report\nconst userTimeReport = Object.values(userTimeMap)\n  .map(u => ({\n    user_email: u.user_email,\n    first_name: u.first_name,\n    last_name: u.last_name,\n    phone: u.phone,\n    total_minutes: Math.max(1, Math.round(u.total_minutes)),\n    rejoins: u.rejoins,\n    participant_id: u.participant_id,\n    attentiveness_score: u.attentiveness_score\n  }))\n  .sort((a, b) => b.total_minutes - a.total_minutes);\n\nreturn [{\n  json: {\n    success: true,\n    meeting_id: $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"],\n    meeting_name: $item(\"0\").$node[\"server oauth\"].json[\"meeting_name\"],\n    meeting_type: $item(\"0\").$node[\"server oauth\"].json[\"meeting_type\"],\n\n    interval_minutes: 1,\n    meeting_duration_minutes: meetingDurationMinutes,\n    meeting_start_time: minJoin.toISOString(),\n    meeting_end_time: maxLeave.toISOString(),\n\n    total_unique_participants: totalUniqueParticipants,\n    total_participant_records: allParticipants.length,\n    average_participation_minutes: avgDurationMin,\n    max_participation_minutes: maxDurationSec > 0 ? Math.round(maxDurationSec / 60 * 100) / 100 : 0,\n    min_participation_minutes: minDurationSec === Infinity ? 0 : Math.round(minDurationSec / 60 * 100) / 100,\n\n    engagement_score: engagementScore,\n    average_retention: averageRetention,\n    peak_concurrent_users: peakConcurrent,\n    final_active_users: finalActiveUsers,\n    total_joined: totalJoined,\n    total_left: totalLeft,\n\n    engagement_graph: {\n      granularity: \"minute\",\n      granularity_minutes: 1,\n      labels,\n      timestamps,\n      active_participants: activeUsersPerMinute,\n      users_joined: joinedPerMinute,\n      users_left: leftPerMinute\n    },\n\n    user_time_report: userTimeReport\n  }\n}];"
+      },
+      "id": "9af5a0e7-1fa9-41c1-a16d-0443f8ca5ef1",
+      "name": "Calculate Engagement Analytics1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        640
+      ],
+      "notes": "Core analytics engine: engagement graph, peaks, dropoffs, user time report"
+    },
+    {
+      "parameters": {
+        "functionCode": "const wf = this.getWorkflowStaticData(\"global\");\nconst pages = wf.meetingPages || [];\nwf.meetingPages = [];\nif (pages.length === 0) return [{ json: { message: \"No pages collected\", participants: [] } }];\nreturn pages.map(p => ({ json: p }));"
+      },
+      "id": "4cadd96c-1c4e-4565-8883-5ade85c7a789",
+      "name": "Return Pages (Meeting)1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $item(\"0\").$node[\"server oauth\"].json[\"api_url\"] }}report/meetings/{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}/participants",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page_size",
+              "value": "30"
+            },
+            {
+              "name": "next_page_token",
+              "value": "={{ $json.next_page_token }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $item(\"0\").$node[\"server oauth\"].json[\"zoom_access_token\"] }}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "id": "7584ebbf-4092-45b1-96d3-e17b06b92575",
+      "name": "Get Next Page (Meeting)1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -192,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.next_page_token }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "223ac7a1-adb9-4b6a-815a-75c7cd956bca",
+      "name": "Has More Pages? (Meeting)1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Accumulate Page - MEETING (separate key)\nconst wf = this.getWorkflowStaticData(\"global\");\nif (!wf.meetingPages) wf.meetingPages = [];\nfor (const item of $input.all()) {\n  wf.meetingPages.push(item.json);\n}\nconst last = $input.last().json;\nconst token = last.next_page_token || \"\";\nreturn [{ json: { next_page_token: token } }];"
+      },
+      "id": "e0d751c9-aefc-448f-ac61-6b3ed42c2d0e",
+      "name": "Accumulate Page (Meeting)1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const wf = this.getWorkflowStaticData(\"global\");\nconst pages = wf.webinarPages || [];\nwf.webinarPages = [];\nif (pages.length === 0) return [{ json: { message: \"No pages collected\", participants: [] } }];\nreturn pages.map(p => ({ json: p }));"
+      },
+      "id": "13929cf3-d4d6-4afb-8709-e0f4ac4a2b06",
+      "name": "Return Pages (Webinar)1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $item(\"0\").$node[\"server oauth\"].json[\"api_url\"] }}report/webinars/{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}/participants",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page_size",
+              "value": "30"
+            },
+            {
+              "name": "next_page_token",
+              "value": "={{ $json.next_page_token }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $item(\"0\").$node[\"server oauth\"].json[\"zoom_access_token\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2177297f-a1e3-433c-b139-8cd228494370",
+      "name": "Get Next Page (Webinar)1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -192,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.next_page_token }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "79e2d094-0849-45d6-97dd-476fb49d4a53",
+      "name": "Has More Pages? (Webinar)1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Accumulate Page - WEBINAR (separate key)\nconst wf = this.getWorkflowStaticData(\"global\");\nif (!wf.webinarPages) wf.webinarPages = [];\nfor (const item of $input.all()) {\n  wf.webinarPages.push(item.json);\n}\nconst last = $input.last().json;\nconst token = last.next_page_token || \"\";\nreturn [{ json: { next_page_token: token } }];"
+      },
+      "id": "c54a0a00-1271-4357-a743-fb36b43a22ff",
+      "name": "Accumulate Page (Webinar)1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $item(\"0\").$node[\"server oauth\"].json[\"api_url\"] }}report/webinars/{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}/participants",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page_size",
+              "value": "30"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $item(\"0\").$node[\"server oauth\"].json[\"zoom_access_token\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ee8c7972-45ba-4624-82ab-58b63d51cec2",
+      "name": "Get First Page (Webinar)1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -928,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5bef2c55-8fda-4ac9-b3f7-0f9dd55feba1",
+              "leftValue": "={{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_type\"] }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "70ad1aba-99bd-499b-ba65-2c8c3e83e243",
+              "leftValue": "={{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_type\"] }}",
+              "rightValue": 6,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "b94b1d61-c961-49f5-a0b3-b51495a5df43",
+              "leftValue": "={{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_type\"] }}",
+              "rightValue": 9,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "109ebe90-551d-4c1a-976e-45aa6e8ed0fb",
+      "name": "Is Webinar?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1216,
+        448
+      ],
+      "notes": "Types 5,6,9 = webinar; else = regular meeting"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "id": "1ee5115f-2bc5-4c42-adaa-26fbebdd4cc7",
+      "name": "Wait 2 Seconds1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1440,
+        448
+      ],
+      "webhookId": "e978c31b-d587-4d9b-b505-83afd13a12ed",
+      "notes": "Wait for Zoom to finalize meeting report data"
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "adc0d894-50e2-4c89-9419-5425b6803469",
+      "name": "Respond 200 OK1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1664,
+        448
+      ],
+      "notes": "Acknowledge the Zoom event with 200 OK"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n\"plainToken\": \"{{ $json.plainToken }}\",\n\"encryptedToken\": \"{{ $json[\"encryptedToken\"] }}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "28911b05-5f57-4a88-bbe6-8efa2ba1eb4a",
+      "name": "Respond Validation1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        256
+      ],
+      "notes": "Returns validation response to Zoom"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    plainToken: $item(\"0\").$node[\"Webhook Trigger1\"].json.body && $item(\"0\").$node[\"Webhook Trigger1\"].json.body.payload ? $item(\"0\").$node[\"Webhook Trigger1\"].json.body.payload.plainToken : null,\n    encryptedToken: $input.first().json.data ? $input.first().json.data : null\n  }\n};"
+      },
+      "id": "08032153-3c9e-4366-9326-9ac83c3c78a4",
+      "name": "Format Validation Response1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1440,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zoom-analytics-support",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a925724f-1a41-4bce-9f97-4164a6f6fafe",
+      "name": "Webhook Trigger1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2560,
+        1088
+      ],
+      "webhookId": "c127a483-8fe1-4f2f-b447-e19ab52a3b4f",
+      "notes": "Listens for Zoom meeting.ended webhook events"
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "622e7ec1-a2d0-49ad-af96-cf05060aad31",
+      "name": "Respond to Webhook (Events)1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -1664,
+        1472
+      ],
+      "notesInFlow": true,
+      "typeVersion": 1,
+      "notes": "This node answers to the endpoint in case of regular Zoom events - such as ending meetings in this case."
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "id": "99386ec5-2298-4bce-9d42-882381419715",
+      "name": "Wait 1 second1",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        -1216,
+        1472
+      ],
+      "webhookId": "e693ccc9-e7b5-4076-a3d5-5449f8e570db",
+      "notesInFlow": true,
+      "typeVersion": 1.1,
+      "notes": "This node waits 1 second to avoid calling the past webinar to early before it is available."
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -640,
+        1472
+      ],
+      "id": "dac89f4e-9d89-4626-9fbe-3e7ec4bb5068",
+      "name": "Wait3",
+      "webhookId": "cce91748-51bc-40f6-b019-1dddf15e7a3e"
+    },
+    {
+      "parameters": {
+        "url": "={{ $item(\"0\").$node[\"server oauth\"].json[\"api_url\"] }}report/meetings/{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}/participants",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page_size",
+              "value": "30"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $item(\"0\").$node[\"server oauth\"].json[\"zoom_access_token\"] }}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -928,
+        688
+      ],
+      "id": "7d40e645-a050-4873-88d8-6f79578c74d4",
+      "name": "Get First Page (Meeting)2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -640,
+        1280
+      ],
+      "id": "4f9ea0be-e23b-4628-86e1-75150e8d0b2e",
+      "name": "Wait2",
+      "webhookId": "bd67c532-7567-4bf2-be53-6248acf27268"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "id": "915b6757-8274-45dd-a16f-6c72d2e46db1",
+      "name": "Wait 1 second",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        -1216,
+        1280
+      ],
+      "webhookId": "c8fb4008-c229-4bcb-b096-483111dca7be",
+      "notesInFlow": true,
+      "typeVersion": 1.1,
+      "notes": "This node waits 1 second to avoid calling the past webinar to early before it is available."
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "6dcc359f-3670-4144-9672-fa3cecebd837",
+      "name": "Respond to Webhook (Events)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -1664,
+        1280
+      ],
+      "notesInFlow": true,
+      "typeVersion": 1,
+      "notes": "This node answers to the endpoint in case of regular Zoom events - such as ending meetings in this case."
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 6,
+        "output": "={{$item(\"0\").$node[\"Webhook Trigger1\"].json.body.event === \"endpoint.url_validation\" ? 0 : \n\n($item(\"0\").$node[\"Webhook Trigger1\"].json.body.event === \"meeting.ended\" || $item(\"0\").$node[\"Webhook Trigger1\"].json.body.event === \"webinar.ended\") ? 1 : \n\n($item(\"0\").$node[\"Webhook Trigger1\"].json.body.event === \"meeting.participant_left\" && $item(\"0\").$node[\"Webhook Trigger1\"].json.body.payload.object.participant.leave_reason != \"left the meeting. Reason : Host ended the meeting.\") ? 2 : \n\n($item(\"0\").$node[\"Webhook Trigger1\"].json.body.event === \"webinar.participant_left\" && $item(\"0\").$node[\"Webhook Trigger1\"].json.body.payload.object.participant.leave_reason != \"left the meeting. Reason : Host ended the meeting.\") ? 3 : \n\n($item(\"0\").$node[\"Webhook Trigger1\"].json.body.event === \"recording.transcript_completed\") ? 4 :\n5}}",
+        "looseTypeValidation": true
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -1888,
+        1040
+      ],
+      "id": "0e2f3cfc-b095-4cb4-927b-cdde0c2db7bc",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d30dd00-6db5-42db-9613-d4805f113d16",
+              "name": "contact_id",
+              "value": "={{ $json.contact.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5085212c-09e4-46ff-96af-e222021f2c56",
+              "name": "time",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"object\"][\"start_time\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        448
+      ],
+      "id": "20731227-2661-4761-8314-bd34f20c7c7e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d30dd00-6db5-42db-9613-d4805f113d16",
+              "name": "contact_id",
+              "value": "={{ $json.contact.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5085212c-09e4-46ff-96af-e222021f2c56",
+              "name": "time",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"object\"][\"start_time\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        832
+      ],
+      "id": "2a29aa97-e5f6-4cf8-b996-993436d0b5c8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://zoom.us/oauth/token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "account_credentials"
+            },
+            {
+              "name": "account_id",
+              "value": "=p_wBPLDtRpqr2ke75ukXgQ"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "id": "6b1a615b-b5c7-4b89-96a5-b289f88dfae7",
+      "name": "Get zoom auth token6",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -2336,
+        1088
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "6PXZugg7Z0ZC2l1M",
+          "name": "support@diptivartakacademy.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "504254fc-a99e-4c08-9100-fd6171df39ed",
+              "name": "account_id",
+              "value": "p_wBPLDtRpqr2ke75ukXgQ",
+              "type": "string"
+            },
+            {
+              "id": "fccf454d-bf9d-4f26-a2ec-091c5f144ffb",
+              "name": "zoom_bearer",
+              "value": "Bearer ZjhUNk5yZWhRMGU5aFlZZDgxSk5NUTp5NGpEY2dXazRPcE1aZU5KdW1mMGgyUDVwbEVnMGU2Mg==",
+              "type": "string"
+            },
+            {
+              "id": "1465f26c-e4db-4dde-bdc1-292d950f1078",
+              "name": "ghl_token",
+              "value": "Bearer pit-483b6b60-2989-4e5f-8b3a-0b4f8702cc51",
+              "type": "string"
+            },
+            {
+              "id": "e68885a9-ada7-4206-a0c1-01725bcf933d",
+              "name": "ghl_location",
+              "value": "c5pmhaUCKw488A7LdZDr",
+              "type": "string"
+            },
+            {
+              "id": "6eb3a408-57a9-4a70-a7ca-c278ba62aa1b",
+              "name": "meeting_webinar_date",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"object\"][\"start_time\"].toDateTime().setZone('Asia/Kolkata').toFormat('yyyy-LL-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "83590d9c-bdd5-4be2-859c-966d717c3170",
+              "name": "meeting_id",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"object\"][\"id\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "785ed4c8-ede3-4712-9221-7d633a4ee932",
+              "name": "meeting_name",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"object\"][\"topic\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "3371b8a9-d5a3-4b1c-aaed-9aa9f0553377",
+              "name": "meeting_type",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"object\"][\"type\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "1f84f58f-c492-4f55-b62f-bad9760d8b3b",
+              "name": "api_url",
+              "value": "https://api.zoom.us/v2/",
+              "type": "string"
+            },
+            {
+              "id": "78b73519-d035-4bb4-9513-6501a526e42e",
+              "name": "zoom_access_token",
+              "value": "={{ $item(\"0\").$node[\"Get zoom auth token6\"].json[\"access_token\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "96a4afa7-0b02-4674-95ae-be8e3dda1644",
+              "name": "db_name",
+              "value": "Dipti",
+              "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+              "name": "ai_provider",
+              "value": "openai",
+              "type": "string"
+            },
+            {
+              "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+              "name": "ai_api_key",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2112,
+        1088
+      ],
+      "id": "6607e805-cac4-4388-86c3-e93d715e025e",
+      "name": "server oauth"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6d42719-0da8-4b0a-925c-248537aa8b72",
+              "name": "participant_mail",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"object\"][\"participant\"][\"email\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1440,
+        1280
+      ],
+      "id": "13a0ae5b-ff0b-4df7-a00f-ef1ebb1bc39a",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6d42719-0da8-4b0a-925c-248537aa8b72",
+              "name": "participant_mail",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"object\"][\"participant\"][\"email\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1440,
+        1472
+      ],
+      "id": "cd4145c0-3efc-4b02-b4a1-ffa5c095ce77",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "url": "={{ $item(\"0\").$node[\"server oauth\"].json[\"api_url\"] }}webinars/{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $item(\"0\").$node[\"server oauth\"].json[\"zoom_access_token\"] }}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -928,
+        1472
+      ],
+      "id": "685d9210-cb27-4750-8bf3-d606529fa714",
+      "name": "Get Webinar Details"
+    },
+    {
+      "parameters": {
+        "url": "={{ $item(\"0\").$node[\"server oauth\"].json[\"api_url\"] }}meetings/{{ $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $item(\"0\").$node[\"server oauth\"].json[\"zoom_access_token\"] }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -928,
+        1280
+      ],
+      "id": "d9d1c200-af09-46b5-a1e1-61c39c296833",
+      "name": "Get Meeting Details"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE zoom_meeting_analytics\nSET\n  overall_ai_analysis  = {{ $json.overall_ai_analysis_json ? \"$json_ai$\" + $json.overall_ai_analysis_json + \"$json_ai$::jsonb\" : 'overall_ai_analysis' }},\n  transcript_moments   = $json_tm${{ $json.transcript_moments_json }}$json_tm$::jsonb,\n  transcript           = {{ $json.transcript_content ? \"$tr$\" + $json.transcript_content + \"$tr$\" : 'NULL' }},\n  transcript_available = true,\n  status               = 'COMPLETED'\nWHERE client_name = '{{ $item(\"0\").$node[\"server oauth\"].json[\"db_name\"] }}'\n  AND meeting_id = '{{ $json.meeting_id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -192,
+        1088
+      ],
+      "id": "b071a1cc-67be-4702-bdac-5389cc877c21",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "NscBlX9Rlzlmg1OX",
+          "name": "Zoom Analytics DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nfunction sanitize(str, tag) {\n  if (!str) return '';\n  let s = String(str);\n  const t = '$' + tag + '$';\n  if (s.includes(t)) s = s.replace(new RegExp('\\\\$' + tag + '\\\\$', 'g'), '');\n  return s;\n}\n\nconst aiJson = data.overall_ai_analysis\n  ? sanitize(JSON.stringify(data.overall_ai_analysis), 'ai')\n  : null;\n\nconst momentsJson = sanitize(\n  JSON.stringify(data.transcript_moments || []),\n  'tm'\n);\n\nconst transcriptSafe = sanitize(data.transcript_content || '', 'tx');\n\nreturn [{\n  json: {\n    meeting_id: String(data.meeting_id || ''),\n    overall_ai_analysis_json: aiJson,\n    transcript_moments_json: momentsJson,\n    transcript_content: transcriptSafe,\n    transcript_available: true,\n    transcript_download_url: null,\n    status: 'COMPLETED'\n  }\n}];"
+      },
+      "id": "3547e1ce-1c43-43cc-9e73-d09d62eade95",
+      "name": "Assemble Final Payload1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        1088
+      ],
+      "notes": "Assemble complete payload ready for Postgres HTTP POST"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nlet aiResult = null;\ntry {\n  let content = '';\n\n  if (Array.isArray(data.output) && data.output.length > 0) {\n    const msg = data.output[0];\n    if (Array.isArray(msg.content) && msg.content.length > 0) {\n      content = msg.content[0].text || '';\n    }\n  }\n  if (!content && typeof data.output === 'string') content = data.output;\n  if (!content && typeof data.text === 'string') content = data.text;\n\n  if (content) {\n    content = content.replace(/```json/g, '').replace(/```/g, '').trim();\n    aiResult = JSON.parse(content);\n  }\n} catch (e) {\n  aiResult = {\n    key_insights: [\"AI analysis parsing failed: \" + e.message],\n    recommendations: [\"Please retry analysis\"],\n    transcript_moments: []\n  };\n}\n\nconst buildPrompt = $('Build AI Prompt1').first().json;\n\nreturn [{\n  json: {\n    meeting_id: buildPrompt.meeting_id,\n    meeting_name: buildPrompt.meeting_name,\n    transcript_content: buildPrompt.transcript_content,\n    overall_ai_analysis: aiResult,\n    transcript_moments: aiResult?.transcript_moments || []\n  }\n}];"
+      },
+      "id": "296b2e86-ccc5-4899-ba56-ff3b915f219e",
+      "name": "Parse AI Response1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        1088
+      ],
+      "notes": "Parse JSON from OpenAI response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Transcript text from Download Transcript1\nconst transcript = data.data || '';\nconst meetingId = $item(\"0\").$node[\"server oauth\"].json[\"meeting_id\"];\nconst meetingName = $item(\"0\").$node[\"server oauth\"].json[\"meeting_name\"];\n\nlet prompt = '';\n\nif (transcript && transcript.length >= 100) {\n  prompt =\n    \"ROLE\\nYou are a senior webinar engagement analyst.\\n\\n\" +\n    \"OBJECTIVE\\nAnalyze the FULL transcript and produce time-based insights.\\n\\n\" +\n    \"FULL TRANSCRIPT (ONLY SOURCE OF TRUTH)\\n\\\"\\\"\\\"\" +\n    \"\\n\" + transcript + \"\\n\\\"\\\"\\\"\\n\\n\" +\n    \"HARD RULES (STRICT)\\n\" +\n    \"- Use ONLY the spoken words in the transcript.\\n\" +\n    \"- Do NOT assume slides, polls, Q&A, or visuals.\\n\" +\n    \"- Do NOT mention Zoom or technical issues.\\n\" +\n    \"- Every point MUST reference a specific time in MM:SS format.\\n\" +\n    \"- Every point MUST explain a clear cause and effect.\\n\\n\" +\n    \"TASK 1 \u2014 KEY INSIGHTS\\nWrite 2-4 bullet points.\\n\" +\n    \"Structure: \\\"At <MM:SS>, engagement <increased/decreased> because <specific reason>.\\\"\\n\\n\" +\n    \"TASK 2 \u2014 RECOMMENDATIONS\\nWrite 2-4 bullet points.\\n\" +\n    \"Structure: \\\"Instead of <what happened at <MM:SS>>, the speaker should <specific alternative>.\\\"\\n\\n\" +\n    \"TASK 3 \u2014 TRANSCRIPT MOMENTS\\n\" +\n    \"Write 3-6 important moments from the transcript.\\n\" +\n    \"Each moment must have: time_seconds (integer), time_label (MM:SS), summary (1 sentence), recommendation (1 sentence).\\n\\n\" +\n    \"OUTPUT FORMAT (STRICT JSON ONLY \u2014 no markdown, no extra text)\\n\" +\n    \"{\\n\" +\n    \"  \\\"key_insights\\\": [\\\"...\\\"],\\n\" +\n    \"  \\\"recommendations\\\": [\\\"...\\\"],\\n\" +\n    \"  \\\"transcript_moments\\\": [\\n\" +\n    \"    { \\\"time_seconds\\\": 600, \\\"time_label\\\": \\\"00:10\\\", \\\"summary\\\": \\\"...\\\", \\\"recommendation\\\": \\\"...\\\" }\\n\" +\n    \"  ]\\n\" +\n    \"}\";\n} else {\n  prompt = 'Return this exact JSON: {\"key_insights\": [\"Transcript was not available for this session.\"], \"recommendations\": [\"Enable cloud recording with audio transcript to get AI-powered insights.\"], \"transcript_moments\": []}';\n}\n\nreturn [{\n  json: {\n    meeting_id: meetingId,\n    meeting_name: meetingName,\n    transcript_content: transcript,\n    ai_prompt: prompt\n  }\n}];"
+      },
+      "id": "fdff1e44-066f-4eb3-85a5-0d276bc3c983",
+      "name": "Build AI Prompt1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1216,
+        1088
+      ],
+      "notes": "Construct OpenAI prompt from peaks/dropoffs + transcript"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.transcript_download_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $json.download_access_token }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "58b63a92-6faf-490c-a6fc-6a7ef9a1bb91",
+      "name": "Download Transcript1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -1440,
+        1088
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "6PXZugg7Z0ZC2l1M",
+          "name": "support@diptivartakacademy.com"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "Download VTT transcript file"
+    },
+    {
+      "parameters": {
+        "jsCode": "const provider = (($item('0').$node['server oauth'].json.ai_provider) || 'openai').toLowerCase();\nconst apiKey = ($item('0').$node['server oauth'].json.ai_api_key) || '';\nconst prompt = $input.first().json.ai_prompt || '';\n\nlet text = '';\ntry {\n  if (provider === 'openai') {\n    const res = await fetch('https://api.openai.com/v1/chat/completions', {\n      method: 'POST',\n      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n      body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: prompt }] })\n    });\n    const r = await res.json();\n    text = r.choices?.[0]?.message?.content || '';\n  } else if (provider === 'anthropic') {\n    const res = await fetch('https://api.anthropic.com/v1/messages', {\n      method: 'POST',\n      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },\n      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2048, messages: [{ role: 'user', content: prompt }] })\n    });\n    const r = await res.json();\n    text = r.content?.[0]?.text || '';\n  } else if (provider === 'gemini') {\n    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },\n      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })\n    });\n    const r = await res.json();\n    text = r.candidates?.[0]?.content?.parts?.[0]?.text || '';\n  }\n} catch (e) {\n  text = JSON.stringify({ key_insights: ['AI call failed: ' + e.message], recommendations: [], transcript_moments: [] });\n}\n\nreturn [{ json: { text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        1088
+      ],
+      "id": "ba99cd54-f031-41e0-8961-63f827f175b6",
+      "name": "Message a model1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO zoom_meeting_analytics (\n  client_name,\n  meeting_id,\n  meeting_name,\n  meeting_type,\n  meeting_start_time,\n  meeting_end_time,\n  meeting_duration_minutes,\n  interval_minutes,\n  generated_at,\n  data_source,\n\n  total_unique_participants,\n  total_participant_records,\n  average_participation_minutes,\n  max_participation_minutes,\n  min_participation_minutes,\n\n  engagement_score,\n  average_retention,\n  peak_concurrent_users,\n  final_active_users,\n  total_joined,\n  total_left,\n\n  engagement_graph,\n  peaks,\n  dropoffs,\n  overall_ai_analysis,\n  user_time_report,\n\n  transcript_available,\n  transcript_download_url,\n  status,\n  transcript\n) VALUES (\n  '{{ $item(\"0\").$node[\"server oauth\"].json[\"db_name\"] }}',\n  '{{ $json.meeting_id }}',\n  '{{ $json.meeting_name }}',\n  {{ $json.meeting_type }},\n  {{ $json.meeting_start_time ? \"'\" + $json.meeting_start_time + \"'\" : 'NULL' }},\n  {{ $json.meeting_end_time ? \"'\" + $json.meeting_end_time + \"'\" : 'NULL' }},\n  {{ $json.meeting_duration_minutes }},\n  {{ $json.interval_minutes }},\n  '{{ $json.generated_at }}',\n  '{{ $json.data_source }}',\n\n  {{ $json.total_unique_participants }},\n  {{ $json.total_participant_records }},\n  {{ $json.average_participation_minutes }},\n  {{ $json.max_participation_minutes }},\n  {{ $json.min_participation_minutes }},\n\n  {{ $json.engagement_score }},\n  {{ $json.average_retention }},\n  {{ $json.peak_concurrent_users }},\n  {{ $json.final_active_users }},\n  {{ $json.total_joined }},\n  {{ $json.total_left }},\n\n  $json_eg${{ $json.engagement_graph_json }}$json_eg$::jsonb,\n  $json_pk${{ $json.peaks_json }}$json_pk$::jsonb,\n  $json_do${{ $json.dropoffs_json }}$json_do$::jsonb,\n  {{ $json.overall_ai_analysis_json ? \"$json_ai$\" + $json.overall_ai_analysis_json + \"$json_ai$::jsonb\" : 'NULL' }},\n  $json_ut${{ $json.user_time_report_json }}$json_ut$::jsonb,\n\n  {{ $json.transcript_available }},\n  {{ $json.transcript_download_url ? \"'\" + $json.transcript_download_url + \"'\" : 'NULL' }},\n  '{{ $json.status }}',\n  {{ $json.transcript_content ? \"$tr$\" + $json.transcript_content + \"$tr$\" : 'NULL' }}\n)\nON CONFLICT (client_name, meeting_id) DO UPDATE SET\n  meeting_name              = EXCLUDED.meeting_name,\n  meeting_type              = EXCLUDED.meeting_type,\n  meeting_start_time        = EXCLUDED.meeting_start_time,\n  meeting_end_time          = EXCLUDED.meeting_end_time,\n  meeting_duration_minutes  = EXCLUDED.meeting_duration_minutes,\n  interval_minutes          = EXCLUDED.interval_minutes,\n  generated_at              = EXCLUDED.generated_at,\n  data_source               = EXCLUDED.data_source,\n\n  total_unique_participants = EXCLUDED.total_unique_participants,\n  total_participant_records = EXCLUDED.total_participant_records,\n  average_participation_minutes = EXCLUDED.average_participation_minutes,\n  max_participation_minutes = EXCLUDED.max_participation_minutes,\n  min_participation_minutes = EXCLUDED.min_participation_minutes,\n\n  engagement_score          = EXCLUDED.engagement_score,\n  average_retention         = EXCLUDED.average_retention,\n  peak_concurrent_users     = EXCLUDED.peak_concurrent_users,\n  final_active_users        = EXCLUDED.final_active_users,\n  total_joined              = EXCLUDED.total_joined,\n  total_left                = EXCLUDED.total_left,\n\n  engagement_graph          = EXCLUDED.engagement_graph,\n  peaks                     = EXCLUDED.peaks,\n  dropoffs                  = EXCLUDED.dropoffs,\n  overall_ai_analysis       = COALESCE(EXCLUDED.overall_ai_analysis, zoom_meeting_analytics.overall_ai_analysis),\n  user_time_report          = EXCLUDED.user_time_report,\n\n  transcript_available      = EXCLUDED.transcript_available,\n  transcript_download_url   = EXCLUDED.transcript_download_url,\n  status                    = EXCLUDED.status,\n  transcript                = COALESCE(EXCLUDED.transcript, zoom_meeting_analytics.transcript);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        640
+      ],
+      "id": "01ea5b1c-d5fb-49ba-aa0c-11fe9af1357b",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "NscBlX9Rlzlmg1OX",
+          "name": "Zoom Analytics DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7e5c4fe-2814-4e9f-aa1d-2294e287182d",
+              "name": "transcript_download_url",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"payload\"][\"object\"][\"recording_files\"][\"0\"][\"download_url\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "3066d20a-b884-4096-b953-e297758e18d1",
+              "name": "download_access_token",
+              "value": "={{ $item(\"0\").$node[\"Webhook Trigger1\"].json[\"body\"][\"download_token\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "meeting_id,meeting_name, meeting_type",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1664,
+        1088
+      ],
+      "id": "2a73328e-9450-4974-b935-24803b87f2a6",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nfunction sanitize(str, tag) {\n  if (!str) return '';\n  let s = String(str);\n  const t = '$' + tag + '$';\n  if (s.includes(t)) s = s.replace(new RegExp('\\\\$' + tag + '\\\\$', 'g'), '');\n  return s;\n}\n\nfunction sqlEsc(str) {\n  if (!str) return '';\n  return String(str).replace(/'/g, \"''\");\n}\n\nreturn [{\n  json: {\n    meeting_id: String(data.meeting_id || ''),\n    meeting_name: sqlEsc(data.meeting_name || 'Untitled Meeting'),\n    meeting_type: data.meeting_type || 0,\n    meeting_start_time: data.meeting_start_time || null,\n    meeting_end_time: data.meeting_end_time || null,\n    meeting_duration_minutes: data.meeting_duration_minutes || 0,\n    interval_minutes: 1,\n    generated_at: new Date().toISOString(),\n    data_source: 'zoom_api_raw',\n\n    total_unique_participants: data.total_unique_participants || 0,\n    total_participant_records: data.total_participant_records || 0,\n    average_participation_minutes: data.average_participation_minutes || 0,\n    max_participation_minutes: data.max_participation_minutes || 0,\n    min_participation_minutes: data.min_participation_minutes || 0,\n\n    engagement_score: data.engagement_score || 0,\n    average_retention: data.average_retention || 0,\n    peak_concurrent_users: data.peak_concurrent_users || 0,\n    final_active_users: data.final_active_users || 0,\n    total_joined: data.total_joined || 0,\n    total_left: data.total_left || 0,\n\n    engagement_graph_json: sanitize(JSON.stringify(data.engagement_graph || {}), 'eg'),\n    peaks_json: sanitize(JSON.stringify([]), 'pk'),\n    dropoffs_json: sanitize(JSON.stringify([]), 'do'),\n    overall_ai_analysis_json: null,\n    user_time_report_json: sanitize(JSON.stringify(data.user_time_report || []), 'ut'),\n\n    transcript_available: false,\n    transcript_download_url: null,\n    transcript_content: null,\n    status: 'TRANSCRIPT_PENDING'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        640
+      ],
+      "id": "6883a81b-fb0d-408a-9524-f3a223197d70",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {
+    "Webhook Trigger1": [
+      {
+        "json": {
+          "headers": {},
+          "query": {},
+          "body": {
+            "event": "meeting.ended",
+            "payload": {
+              "account_id": "p_wBPLDtRpqr2ke75ukXgQ",
+              "object": {
+                "id": "87053076260",
+                "type": 2,
+                "topic": "Test Meeting",
+                "start_time": "2026-03-17T19:24:20Z",
+                "end_time": "2026-03-17T19:36:06Z",
+                "uuid": "qVMIL8/EQ1efgV8ApZSMlw==",
+                "host_id": "u06xCKrgRfqO-tdPLE8dfQ"
+              }
+            },
+            "event_ts": 1773776167469
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "custom field update1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "custom field update": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update contact field attendee3": {
+      "main": [
+        [
+          {
+            "node": "Wait7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait7": {
+      "main": [
+        [
+          {
+            "node": "save attendee tag3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update contact field attendee2": {
+      "main": [
+        [
+          {
+            "node": "Wait6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait6": {
+      "main": [
+        [
+          {
+            "node": "save attendee tag2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait5": {
+      "main": [
+        [
+          {
+            "node": "notes update1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "notes update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out3": {
+      "main": [
+        [
+          {
+            "node": "update contact field attendee3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "custom field update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Split Out3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "update contact field attendee2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "custom field update1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "Format Validation Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Engagement Analytics1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Pages (Meeting)1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Calculate Engagement Analytics1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Next Page (Meeting)1": {
+      "main": [
+        [
+          {
+            "node": "Accumulate Page (Meeting)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has More Pages? (Meeting)1": {
+      "main": [
+        [
+          {
+            "node": "Get Next Page (Meeting)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Pages (Meeting)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accumulate Page (Meeting)1": {
+      "main": [
+        [
+          {
+            "node": "Has More Pages? (Meeting)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Pages (Webinar)1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Calculate Engagement Analytics1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Next Page (Webinar)1": {
+      "main": [
+        [
+          {
+            "node": "Accumulate Page (Webinar)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has More Pages? (Webinar)1": {
+      "main": [
+        [
+          {
+            "node": "Get Next Page (Webinar)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Pages (Webinar)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accumulate Page (Webinar)1": {
+      "main": [
+        [
+          {
+            "node": "Has More Pages? (Webinar)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get First Page (Webinar)1": {
+      "main": [
+        [
+          {
+            "node": "Accumulate Page (Webinar)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Webinar?1": {
+      "main": [
+        [
+          {
+            "node": "Get First Page (Webinar)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get First Page (Meeting)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 Seconds1": {
+      "main": [
+        [
+          {
+            "node": "Is Webinar?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond 200 OK1": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Seconds1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Validation Response1": {
+      "main": [
+        [
+          {
+            "node": "Respond Validation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get zoom auth token6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook (Events)1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 second1": {
+      "main": [
+        [
+          {
+            "node": "Get Webinar Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "meet_leave_reminder1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get First Page (Meeting)2": {
+      "main": [
+        [
+          {
+            "node": "Accumulate Page (Meeting)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "meet_leave_reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 second": {
+      "main": [
+        [
+          {
+            "node": "Get Meeting Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook (Events)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 200 OK1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (Events)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (Events)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Wait5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get zoom auth token6": {
+      "main": [
+        [
+          {
+            "node": "server oauth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "server oauth": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 second",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 second1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Webinar Details": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Meeting Details": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Final Payload1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response1": {
+      "main": [
+        [
+          {
+            "node": "Assemble Final Payload1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Prompt1": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Transcript1": {
+      "main": [
+        [
+          {
+            "node": "Build AI Prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Download Transcript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "86a768d1-9ed2-4120-bb57-bade6ffc6995",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66e7322c3cb1fea27888dee0ba1eb70d09ccd00ec2715811e5dacc3b6f240ffa"
+  },
+  "id": "Uv0sicTe9RKJLplR",
+  "tags": []
+}

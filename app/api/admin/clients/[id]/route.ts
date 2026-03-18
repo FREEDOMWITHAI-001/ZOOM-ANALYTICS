@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import pool from '@/lib/db';
@@ -10,7 +11,20 @@ export async function PUT(
   try {
     const client_name = decodeURIComponent(params.id);
     const body = await request.json();
-    const { password, is_active, role } = body;
+    const {
+      password,
+      is_active,
+      role,
+      zoomAccountId,
+      zoomClientId,
+      zoomClientSecret,
+      zoomWebhookSecret,
+      ghlToken,
+      ghlLocationId,
+      dbClientName,
+      aiProvider,
+      aiApiKey,
+    } = body;
 
     const existing = await pool.query(
       'SELECT 1 FROM client_credentials WHERE client_name = $1',
@@ -43,6 +57,26 @@ export async function PUT(
       }
       updates.push(`role = $${idx++}`);
       values.push(role);
+    }
+
+    // Integration fields — allow explicit null to clear a field
+    const integrationFields: [string, string, any][] = [
+      ['zoom_account_id',     'zoomAccountId',     zoomAccountId],
+      ['zoom_client_id',      'zoomClientId',      zoomClientId],
+      ['zoom_client_secret',  'zoomClientSecret',  zoomClientSecret],
+      ['zoom_webhook_secret', 'zoomWebhookSecret', zoomWebhookSecret],
+      ['ghl_token',           'ghlToken',          ghlToken],
+      ['ghl_location_id',     'ghlLocationId',     ghlLocationId],
+      ['db_client_name',      'dbClientName',      dbClientName],
+      ['ai_provider',         'aiProvider',        aiProvider],
+      ['ai_api_key',          'aiApiKey',          aiApiKey],
+    ];
+
+    for (const [col, , val] of integrationFields) {
+      if (val !== undefined) {
+        updates.push(`${col} = $${idx++}`);
+        values.push(val || null);
+      }
     }
 
     if (updates.length === 0) {

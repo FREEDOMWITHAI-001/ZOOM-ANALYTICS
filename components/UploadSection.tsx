@@ -40,6 +40,7 @@ interface ZoomRecording {
   total_size: number;
   account_id: string;
   host_id: string;
+  status?: string;
   recording_files: Array<{
     id: string;
     file_type: string;
@@ -199,6 +200,7 @@ const UploadSection = ({
         total_size: recording.total_size || 0,
         account_id: recording.account_id,
         host_id: recording.host_id,
+        status: recording.status || 'TRANSCRIPT_PENDING',
         recording_files: recording.recording_files || []
       }));
 
@@ -479,7 +481,16 @@ const UploadSection = ({
                         onClick={() => handleRecordingSelect(recording)}
                         className="w-full p-3 text-left hover:bg-primary/10 border-b border-border last:border-b-0 transition-colors"
                       >
-                        <div className="font-medium truncate">{recording.topic}</div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-medium truncate">{recording.topic}</div>
+                          <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${
+                            recording.status === 'COMPLETED'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          }`}>
+                            {recording.status === 'COMPLETED' ? 'AI Ready' : 'Processing AI...'}
+                          </span>
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {formatDate(recording.start_time)} • {formatDuration(recording.duration)}
                         </div>
@@ -503,6 +514,13 @@ const UploadSection = ({
                     <Calendar className="h-4 w-4" />
                     Selected Recording
                   </h4>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    selectedRecording.status === 'COMPLETED'
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                  }`}>
+                    {selectedRecording.status === 'COMPLETED' ? 'AI Ready' : 'Processing AI...'}
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-sm">

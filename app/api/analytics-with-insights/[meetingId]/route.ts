@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
@@ -62,12 +63,15 @@ export async function GET(
       final_active_users: row.final_active_users,
     };
 
+    const total = row.total_unique_participants || 0;
+    const peakConcurrent = row.peak_concurrent_users || 0;
+
     const analytics: Record<string, any> = {
       meeting_id: row.meeting_id,
       success: true,
       interval_minutes: row.interval_minutes,
       meeting_duration: row.meeting_duration_minutes,
-      total_participants: row.total_unique_participants,
+      total_participants: total,
 
       engagement_metrics: engagementMetrics,
       engagement_graph: engagementGraph,
@@ -79,11 +83,15 @@ export async function GET(
 
       engagement_insights: insightsData,
 
-      peak_retention: row.peak_concurrent_users,
+      peak_retention: peakConcurrent,
+      peak_retention_pct: total > 0 ? Math.round((peakConcurrent / total) * 100) : 0,
       average_retention: row.average_retention,
+      peak_concurrent_users: peakConcurrent,
 
       transcript_available: row.transcript_available,
       transcript_download_url: row.transcript_download_url,
+      transcript_moments: row.transcript_moments || row.overall_ai_analysis?.transcript_moments || [],
+      status: row.status,
 
       message: 'Complete analytics with engagement insights',
       data_source: 'postgresql',

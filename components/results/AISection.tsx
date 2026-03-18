@@ -34,7 +34,12 @@ interface AISectionProps {
   comparisonDropoffs?: any[];
 
   zoomAnalyticsData?: any;
-
+  transcriptMoments?: Array<{
+    time_seconds: number;
+    time_label: string;
+    summary: string;
+    recommendation: string;
+  }>;
 }
 
 const AISection: React.FC<AISectionProps> = ({
@@ -62,6 +67,7 @@ const AISection: React.FC<AISectionProps> = ({
   comparisonPeaks = [],
   comparisonDropoffs = [],
   zoomAnalyticsData,
+  transcriptMoments = [],
 }) => {
 
 const [fullTranscript, setFullTranscript] = React.useState<string>("");
@@ -96,6 +102,10 @@ useEffect(() => {
   const preComputedAI = zoomAnalyticsData?.overall_ai_analysis;
   const preComputedInsights: string[] = preComputedAI?.key_insights || [];
   const preComputedRecommendations: string[] = preComputedAI?.recommendations || [];
+  const resolvedTranscriptMoments =
+    transcriptMoments.length > 0
+      ? transcriptMoments
+      : preComputedAI?.transcript_moments || [];
 
   return (
   <AIAnalysisPanel

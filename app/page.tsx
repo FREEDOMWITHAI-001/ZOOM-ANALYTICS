@@ -53,7 +53,7 @@ const IndexPage = () => {
       });
   }, [router]);
 
-  // UPDATED: Enhanced handleAnalysisStart function with better transcript handling
+  // Enhanced handleAnalysisStart function
   const handleAnalysisStart = async (
     attendanceFile: File | null,
     transcriptFile: File | null,
@@ -68,71 +68,18 @@ const IndexPage = () => {
 
       console.log("Starting Zoom API analysis...");
       console.log("Meeting ID:", selectedMeetingId);
-      console.log("Time Interval:", timeInterval);
 
       try {
-        // CRITICAL: Use the analytics-with-insights endpoint
-        console.log("STEP 1: Fetching analytics with insights...");
         const insightsResponse = await fetch(
-          `/api/analytics-with-insights/${selectedMeetingId}?interval=${timeInterval}`
+          `/api/analytics-with-insights/${selectedMeetingId}`
         );
 
-        let analyticsData;
-
-        if (insightsResponse.ok) {
-          analyticsData = await insightsResponse.json();
-          console.log("Analytics with insights received:", analyticsData);
-          console.log(
-            "Has engagement_insights?",
-            !!analyticsData.engagement_insights
-          );
-          console.log("Peaks from API:", analyticsData.peaks);
-          console.log("Dropoffs from API:", analyticsData.dropoffs);
-        } else {
-          // Fallback to regular analytics
-          console.log(
-            "Insights endpoint failed, falling back to regular analytics"
-          );
-          const regularResponse = await fetch(
-            `/api/analytics/${selectedMeetingId}?interval=${timeInterval}`
-          );
-
-          if (!regularResponse.ok) {
-            throw new Error(
-              `Analytics API failed: ${regularResponse.status}`
-            );
-          }
-
-          analyticsData = await regularResponse.json();
-          console.log("Regular analytics data received:", analyticsData);
-
-          // Calculate insights from regular analytics data
-          if (analyticsData.engagement_graph) {
-            const calculatedInsights = calculateInsightsFromEngagementData(
-              analyticsData.engagement_graph,
-              timeInterval,
-              analyticsData.total_participants || 0
-            );
-
-            analyticsData.engagement_insights = calculatedInsights;
-            analyticsData.peaks = calculatedInsights.peaks;
-            analyticsData.dropoffs = calculatedInsights.dropoffs;
-          }
+        if (!insightsResponse.ok) {
+          throw new Error(`Analytics API failed: ${insightsResponse.status}`);
         }
 
-        // Check for transcript
-        if (!analyticsData.transcript_available || !analyticsData.transcript) {
-          console.log("STEP 2: Fetching transcript separately...");
-          const transcriptResponse = await fetch(
-            `/api/transcript-direct/${selectedMeetingId}`
-          );
-
-          if (transcriptResponse.ok) {
-            const transcriptData = await transcriptResponse.json();
-            console.log("Transcript data received:", transcriptData);
-            analyticsData.transcript = transcriptData;
-          }
-        }
+        const analyticsData = await insightsResponse.json();
+        console.log("Analytics received:", analyticsData);
 
         setZoomAnalyticsData(analyticsData);
         setAttendanceFile(null);
@@ -157,152 +104,10 @@ const IndexPage = () => {
     }
   };
 
-  // Add this helper function to calculate insights from engagement data
-  const calculateInsightsFromEngagementData = (
-    engagementGraph: any,
-    interval: string,
-    totalParticipants: number
-  ) => {
-    const intervalNum = parseInt(interval) || 5;
-
-    if (
-      !engagementGraph ||
-      !engagementGraph.active_participants ||
-      !engagementGraph.labels
-    ) {
-      return {
-        peaks: [],
-        dropoffs: [],
-        engagement_score: 0,
-      };
-    }
-
-    const activeParticipants = engagementGraph.active_participants;
-    const labels = engagementGraph.labels;
-
-    const peaks: any[] = [];
-    const dropoffs: any[] = [];
-
-    // Calculate percentage changes
-    for (let i = 1; i < activeParticipants.length; i++) {
-      const prev = activeParticipants[i - 1];
-      const curr = activeParticipants[i];
-
-      if (prev > 0) {
-        const percentageChange = ((curr - prev) / prev) * 100;
-
-        if (percentageChange > 5) {
-          peaks.push({
-            timeInterval: labels[i] || `Time ${i}`,
-            count: curr,
-            percentageChange: Math.round(percentageChange),
-            description: getPeakDescription(peaks.length, labels[i]),
-          });
-        } else if (percentageChange < -5) {
-          dropoffs.push({
-            timeInterval: labels[i] || `Time ${i}`,
-            count: curr,
-            percentageChange: Math.round(percentageChange),
-            description: getDropoffDescription(dropoffs.length, labels[i]),
-          });
-        }
-      }
-    }
-
-    // Sort and limit to top 5
-    peaks.sort((a, b) => b.percentageChange - a.percentageChange);
-    dropoffs.sort((a, b) => a.percentageChange - b.percentageChange);
-
-    // Calculate engagement score
-    const maxActive = Math.max(...activeParticipants);
-    const avgActive =
-      activeParticipants.reduce((a: number, b: number) => a + b, 0) /
-      activeParticipants.length;
-    const engagementScore =
-      maxActive > 0 ? Math.round((avgActive / maxActive) * 100) : 0;
-
-    return {
-      peaks: peaks.slice(0, 5),
-      dropoffs: dropoffs.slice(0, 5),
-      engagement_score: engagementScore,
-      total_participants: totalParticipants,
-      max_active: maxActive,
-      avg_active: Math.round(avgActive),
-    };
-  };
-
-  // Helper functions for descriptions
-  const getPeakDescription = (index: number, time: string) => {
-    const descriptions = [
-      `Engagement spike at ${time} - likely interactive content`,
-      `Participant increase at ${time} - possibly Q&A session`,
-      `Attention boost at ${time} - key content delivered`,
-      `Retention peak at ${time} - audience engaged`,
-      `Viewer surge at ${time} - scheduled joiners arrived`,
-    ];
-    return descriptions[Math.min(index, descriptions.length - 1)];
-  };
-
-  const getDropoffDescription = (index: number, time: string) => {
-    const descriptions = [
-      `Drop-off at ${time} - check technical issues`,
-      `Audience decline at ${time} - content transition`,
-      `Engagement dip at ${time} - complex topic`,
-      `Participant decrease at ${time} - break time`,
-      `Attention drop at ${time} - lengthy explanation`,
-    ];
-    return descriptions[Math.min(index, descriptions.length - 1)];
-  };
-
-  // Also update the handleIntervalChangeWithZoom function:
+  // For minute-level data, interval changes don't require a refetch — ResultsSection re-aggregates locally.
   const handleIntervalChangeWithZoom = (newInterval: string) => {
     setTimeInterval(newInterval);
-
-    // If we're viewing Zoom meeting results, refetch with new interval
-    if (selectedMeetingId && !attendanceFile) {
-      fetch(
-        `/api/analytics-with-insights/${selectedMeetingId}?interval=${newInterval}`
-      )
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((data) => {
-          console.log("Refetched data with new interval:", data);
-          setZoomAnalyticsData(data);
-        })
-        .catch((error) => {
-          console.error("Error refetching analytics:", error);
-
-          // Fallback to regular analytics
-          fetch(
-            `/api/analytics/${selectedMeetingId}?interval=${newInterval}`
-          )
-            .then((response) => response.json())
-            .then((fallbackData) => {
-              // Calculate insights from fallback data
-              if (fallbackData.engagement_graph) {
-                const calculatedInsights =
-                  calculateInsightsFromEngagementData(
-                    fallbackData.engagement_graph,
-                    newInterval,
-                    fallbackData.total_participants || 0
-                  );
-                fallbackData.engagement_insights = calculatedInsights;
-                fallbackData.peaks = calculatedInsights.peaks;
-                fallbackData.dropoffs = calculatedInsights.dropoffs;
-              }
-              setZoomAnalyticsData(fallbackData);
-            })
-            .catch(() => {
-              console.error(
-                "Failed to fetch analytics with new interval"
-              );
-            });
-        });
-    }
+    // No API refetch needed — aggregation is done client-side in ResultsSection.
   };
 
   // Handle comparison file uploads

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getCallerAIConfig, callAI } from '@/lib/ai-client';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -35,28 +36,11 @@ export async function POST(request: NextRequest) {
     'OUTPUT FORMAT (STRICT JSON ONLY)\n{\n  "key_insights": ["..."],\n  "recommendations": ["..."]\n}';
 
   try {
-    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-        temperature: 0.2,
-        max_tokens: 900,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
-
-    const res = await openaiRes.json();
-    const choices = res.choices;
-
-    if (!choices || choices.length === 0) {
-      return NextResponse.json({ success: false, error: 'No response from AI' });
+    const aiConfig = await getCallerAIConfig();
+    if (!aiConfig) {
+      return NextResponse.json({ success: false, error: 'AI provider not configured for this account' }, { status: 400 });
     }
-
-    const content = choices[0].message.content;
+    const content = await callAI(aiConfig, prompt);
 
     try {
       const aiResult = JSON.parse(content);
@@ -65,6 +49,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'AI response parsing failed' });
     }
   } catch (e: any) {
-    return NextResponse.json({ success: false, error: `OpenAI request failed: ${e.message}` });
+    return NextResponse.json({ success: false, error: `AI request failed: ${e.message}` });
   }
 }

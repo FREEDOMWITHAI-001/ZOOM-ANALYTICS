@@ -23,6 +23,14 @@ import ExtraDataVisualization from "./results/ExtraDataVisualization";
 // Import the data processor hook
 import { useResultsDataProcessor } from "./results/ResultsDataProcessor";
 
+// Import window aggregation utility
+import {
+  aggregateMinuteData,
+  matchTranscriptMoment,
+  type TranscriptMoment,
+  type RawEngagementGraph,
+} from "@/lib/csv/window-aggregation";
+
 // UPDATE ResultsSection props to accept timeInterval and onIntervalChange
 interface ResultsSectionProps {
   isVisible?: boolean;
@@ -130,67 +138,76 @@ const ResultsSection = ({
     isComparisonMode,
   });
 
-  // Convert Zoom data with current time interval (graph will update)
-  const convertZoomDataToRetentionData = (zoomData: any, interval: string = "5"): any[] => {
-    if (!zoomData || !zoomData.engagement_graph) {
-      return [];
-    }
-    
-    const graphData = zoomData.engagement_graph;
-    const intervalNum = parseInt(interval) || 5;
-    
-    if (graphData.labels && graphData.labels.length > 0) {
-      return graphData.labels.map((label: string, index: number) => {
-        const timeDisplay = formatTimeLabel(label);
-        return {
-          time: timeDisplay,
-          participants: graphData.active_participants?.[index] || 0,
-          retention: graphData.engagement_rate?.[index] || 0
-        };
-      });
-    }
-    
-    // Generate based on data length with current interval
-    const dataPoints = graphData.active_participants || graphData.engagement_rate || [];
-    return dataPoints.map((_: any, index: number) => {
-      const totalMinutes = index * intervalNum;
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      const timeDisplay = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-      
-      return {
-        time: timeDisplay,
-        participants: graphData.active_participants?.[index] || 0,
-        retention: graphData.engagement_rate?.[index] || 0
-      };
-    });
-  };
+  // Compute aggregated data from minute-level Zoom graph
+  const zoomAggregated = useMemo(() => {
+    if (!zoomAnalyticsData?.engagement_graph) return null;
 
-  const formatTimeLabel = (label: string): string => {
-    let timeDisplay = label;
-    
-    if (label.includes('-') && label.includes('min')) {
-      const match = label.match(/(\d+)-(\d+)min/);
-      if (match) {
-        const startMin = parseInt(match[1]);
-        const hours = Math.floor(startMin / 60);
-        const minutes = startMin % 60;
-        timeDisplay = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-      }
+    const graph = zoomAnalyticsData.engagement_graph as RawEngagementGraph;
+    const isMinuteLevel = graph.granularity === "minute" || (graph.granularity_minutes === 1);
+    const windowMinutes = parseInt(localTimeInterval) || 5;
+
+    const transcriptMoments: TranscriptMoment[] =
+      zoomAnalyticsData.transcript_moments ||
+      zoomAnalyticsData.overall_ai_analysis?.transcript_moments ||
+      [];
+
+    if (isMinuteLevel) {
+      const agg = aggregateMinuteData(graph, windowMinutes);
+
+      // Enrich peaks/dropoffs with AI descriptions from transcript_moments
+      const enrichedPeaks = agg.peaks.map((p) => ({
+        ...p,
+        description: matchTranscriptMoment(
+          transcriptMoments,
+          p.bucketStartMinute,
+          p.bucketEndMinute,
+          "peak",
+          p.percentageChange
+        ),
+      }));
+      const enrichedDropoffs = agg.dropoffs.map((d) => ({
+        ...d,
+        description: matchTranscriptMoment(
+          transcriptMoments,
+          d.bucketStartMinute,
+          d.bucketEndMinute,
+          "dropoff",
+          d.percentageChange
+        ),
+      }));
+
+      const graphData = agg.labels.map((label, i) => ({
+        time: label,
+        participants: agg.active[i],
+        retention: 0,
+      }));
+
+      return { graphData, peaks: enrichedPeaks, dropoffs: enrichedDropoffs, isMinuteLevel: true };
     }
-    
-    return timeDisplay;
-  };
+
+    // Legacy pre-bucketed data — use as-is
+    const graphData = graph.labels.map((label: string, index: number) => ({
+      time: label,
+      participants: graph.active_participants?.[index] || 0,
+      retention: 0,
+    }));
+
+    return {
+      graphData,
+      peaks: zoomAnalyticsData.peaks || [],
+      dropoffs: zoomAnalyticsData.dropoffs || [],
+      isMinuteLevel: false,
+    };
+  }, [zoomAnalyticsData, localTimeInterval]);
 
   // Memoize graph data based on time interval
   const graphRetentionData = useMemo(() => {
     console.log(`🔄 Recalculating graph data for interval: ${localTimeInterval}`);
-    
     if (zoomAnalyticsData) {
-      return convertZoomDataToRetentionData(zoomAnalyticsData, localTimeInterval);
+      return zoomAggregated?.graphData || [];
     }
     return processedRetentionData;
-  }, [zoomAnalyticsData, localTimeInterval, processedRetentionData]);
+  }, [zoomAnalyticsData, zoomAggregated, localTimeInterval, processedRetentionData]);
 
   // Effect to detect when graph data actually updates and stop loading
   useEffect(() => {
@@ -225,17 +242,18 @@ const ResultsSection = ({
     
     // For Zoom data, extract initial statistics
     if (zoomAnalyticsData && initialLoadRef.current) {
+      const total = zoomAnalyticsData?.total_participants || 0;
+      const peakConcurrent = zoomAnalyticsData?.peak_concurrent_users || zoomAnalyticsData?.peak_retention || 0;
+      const avgRetention = zoomAnalyticsData?.average_retention || 0;
       const zoomStats = {
-        totalAttendees: zoomAnalyticsData?.total_participants || 0,
-        peakRetention: zoomAnalyticsData?.engagement_graph?.engagement_rate ? 
-          Math.max(...zoomAnalyticsData.engagement_graph.engagement_rate) : 0,
-        averageRetention: zoomAnalyticsData?.engagement_graph?.engagement_rate ? 
-          zoomAnalyticsData.engagement_graph.engagement_rate.reduce((a: number, b: number) => a + b, 0) / 
-          zoomAnalyticsData.engagement_graph.engagement_rate.length : 0,
-        peakParticipants: zoomAnalyticsData?.engagement_insights?.max_active || 0,
-        averageParticipants: zoomAnalyticsData?.engagement_insights?.avg_active || 0,
-        peaks: zoomAnalyticsData?.peaks || [],
-        dropoffs: zoomAnalyticsData?.dropoffs || [],
+        totalAttendees: total,
+        peakRetention: zoomAnalyticsData?.peak_retention_pct || (total > 0 ? Math.round((peakConcurrent / total) * 100) : 0),
+        averageRetention: avgRetention,
+        peakParticipants: peakConcurrent,
+        averageParticipants: total > 0 ? Math.round((avgRetention / 100) * total) : 0,
+        // peaks/dropoffs start empty — they're computed dynamically via zoomAggregated
+        peaks: [],
+        dropoffs: [],
         insights: [],
         recommendations: []
       };
@@ -501,10 +519,10 @@ const ResultsSection = ({
           />
         </div>
         
-        {/* Insights Table - Use static insights */}
-        <InsightsSection 
-          peaks={statistics.peaks}
-          dropoffs={statistics.dropoffs}
+        {/* Insights Table - Dynamic peaks/dropoffs for Zoom data */}
+        <InsightsSection
+          peaks={zoomAggregated ? zoomAggregated.peaks : statistics.peaks}
+          dropoffs={zoomAggregated ? zoomAggregated.dropoffs : statistics.dropoffs}
           comparisonPeaks={[]}
           comparisonDropoffs={[]}
           isComparisonMode={isComparisonMode}
@@ -538,16 +556,20 @@ const ResultsSection = ({
             isComparisonMode={isComparisonMode}
             webinar1Name={webinar1Name}
             webinar2Name={webinar2Name}
-            
-            // Pass data for AI analysis
-            peaks={statistics.peaks}
-            dropoffs={statistics.dropoffs}
+
+            // Pass dynamic peaks/dropoffs
+            peaks={zoomAggregated ? zoomAggregated.peaks : statistics.peaks}
+            dropoffs={zoomAggregated ? zoomAggregated.dropoffs : statistics.dropoffs}
             totalAttendees={statistics.totalAttendees}
             averageRetention={statistics.averageRetention}
             captionSegments={dataCaptionData}
             retentionData={graphRetentionData}
-            // Add Zoom-specific data for better AI analysis
             zoomAnalyticsData={zoomAnalyticsData}
+            transcriptMoments={
+              zoomAnalyticsData?.transcript_moments ||
+              zoomAnalyticsData?.overall_ai_analysis?.transcript_moments ||
+              []
+            }
           />
         </div>
       </motion.div>

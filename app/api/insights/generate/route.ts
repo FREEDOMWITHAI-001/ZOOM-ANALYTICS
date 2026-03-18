@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getCallerAIConfig, callAI } from '@/lib/ai-client';
 
 function buildPrompt(type: string, item: any): string {
   let rawTime = String(item.timeInterval || item.time || '').trim();
@@ -46,32 +47,18 @@ export async function POST(request: NextRequest) {
   ];
 
   try {
+    const aiConfig = await getCallerAIConfig();
+    if (!aiConfig) {
+      return NextResponse.json({ error: 'AI provider not configured for this account' }, { status: 400 });
+    }
+
     const results = await Promise.all(
       allItems.map(async (item) => {
         const type = item._type;
         const prompt = buildPrompt(type, item);
 
         try {
-          const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-              temperature: 0.2,
-              max_tokens: 200,
-              messages: [{ role: 'user', content: prompt }],
-            }),
-          });
-
-          const res = await openaiRes.json();
-          const choices = res.choices;
-
-          if (!choices || choices.length === 0) return {};
-
-          let content = choices[0].message.content;
+          let content = await callAI(aiConfig, prompt);
           content = content.replace(/```json/g, '').replace(/```/g, '').trim();
 
           try {
