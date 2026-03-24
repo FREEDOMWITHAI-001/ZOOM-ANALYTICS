@@ -12,6 +12,28 @@ interface SignificantPoint {
   impact: number;
 }
 
+// Helper: extract minutes from various time formats safely
+function safeGetMinutes(timeStr: string): number {
+  if (!timeStr) return 0;
+  // Handle range "HH:MM-HH:MM" — use start
+  const rangeMatch = timeStr.match(/^(\d{1,2}):(\d{2})\s*[-–]/);
+  if (rangeMatch) return Number(rangeMatch[1]) * 60 + Number(rangeMatch[2]);
+  // Handle "MM-DD HH:MM"
+  if (timeStr.includes('-') && timeStr.includes(' ')) {
+    const timePart = timeStr.split(' ')[1];
+    if (timePart && timePart.includes(':')) {
+      const [h, m] = timePart.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    }
+  }
+  // Handle "HH:MM"
+  if (timeStr.includes(':')) {
+    const [h, m] = timeStr.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  }
+  return 0;
+}
+
 interface UseGraphConfigurationProps {
   data: DataPoint[];
   comparisonData: DataPoint[];
@@ -67,42 +89,41 @@ export const useGraphConfiguration = ({
     const avg =
       data.reduce((sum, point) => sum + point.participants, 0) / data.length;
 
-    // Enhanced time label formatting with proper parsing - removes any prefixes like '0104'
+    // Enhanced time label formatting with proper parsing
     const formatTimeLabel = (timeStr: string) => {
-      // First clean up any unexpected prefixes (like '0104') that might be in the time string
-      // This regex looks for patterns like digits followed by a dash or digits at the start
-      const cleanedTimeStr = timeStr.replace(/^\d+[-–]\d+\s*/, '').trim();
-      
-      // Log the original and cleaned time string for debugging
-      console.log(`Original time: '${timeStr}', Cleaned: '${cleanedTimeStr}'`);
-      
+      if (!timeStr) return '00:00';
+
+      // Handle range format "HH:MM-HH:MM" — use the start of the range
+      const rangeMatch = timeStr.match(/^(\d{1,2}:\d{2})\s*[-–]\s*\d{1,2}:\d{2}$/);
+      if (rangeMatch) {
+        const [hours, minutes] = rangeMatch[1].split(':').map(num => num.padStart(2, '0'));
+        return `${hours}:${minutes}`;
+      }
+
       // Check if time contains a date (MM-DD HH:MM format)
-      if (cleanedTimeStr.includes('-')) {
-        const parts = cleanedTimeStr.split(' ');
-        if (parts.length === 2) {
-          const timePart = parts[1];
-          // Ensure HH:MM format
-          const [hours, minutes] = timePart.split(':').map(num => num.padStart(2, '0'));
+      if (timeStr.includes('-') && timeStr.includes(' ')) {
+        const parts = timeStr.split(' ');
+        if (parts.length === 2 && parts[1].includes(':')) {
+          const [hours, minutes] = parts[1].split(':').map(num => num.padStart(2, '0'));
           return `${hours}:${minutes}`;
         }
       }
-      
+
       // For HH:MM format
-      if (cleanedTimeStr.includes(':')) {
-        const [hours, minutes] = cleanedTimeStr.split(':').map(num => num.padStart(2, '0'));
+      if (timeStr.includes(':')) {
+        const [hours, minutes] = timeStr.split(':').map(num => num.padStart(2, '0'));
         return `${hours}:${minutes}`;
       }
-      
+
       // For numerical minutes, convert to HH:MM format
-      const minutes = parseInt(cleanedTimeStr);
+      const minutes = parseInt(timeStr);
       if (!isNaN(minutes)) {
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
         return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
       }
-      
-      // If we can't parse it, just return the cleaned string
-      return cleanedTimeStr;
+
+      return timeStr;
     };
 
     // Prepare data for recharts with leavers count
@@ -197,33 +218,13 @@ export const useGraphConfiguration = ({
     // Enhanced filtering of significant points with smarter proximity detection
     const filteredPoints = significant.reduce((acc, point) => {
       const tooClose = acc.some((p) => {
-        // Convert time strings to comparable minutes for consistent comparison
-        const getMinutes = (timeStr: string) => {
-          const [hours, minutes] = timeStr.split(':').map(Number);
-          return hours * 60 + minutes;
-        };
-
-        let timeAMinutes: number, timeBMinutes: number;
-
-        // Handle different time formats
-        if (p.time.includes('-') && point.time.includes('-')) {
-          // For MM-DD HH:MM format
-          const timeA = p.time.split(' ')[1];
-          const timeB = point.time.split(' ')[1];
-          timeAMinutes = getMinutes(timeA);
-          timeBMinutes = getMinutes(timeB);
-        } else {
-          // For HH:MM format
-          timeAMinutes = getMinutes(p.time);
-          timeBMinutes = getMinutes(point.time);
-        }
+        const timeAMinutes = safeGetMinutes(p.time);
+        const timeBMinutes = safeGetMinutes(point.time);
 
         // Dynamic proximity threshold based on total session duration
         const sessionDuration = Math.max(
-          ...data.map(d => {
-            const [h, m] = d.time.split(':').map(Number);
-            return h * 60 + (m || 0);
-          })
+          ...data.map(d => safeGetMinutes(d.time)),
+          1
         );
         const proximityThreshold = Math.max(10, Math.floor(sessionDuration * 0.1));
 
@@ -297,8 +298,8 @@ export const useGraphConfiguration = ({
           // Convert time string to Date object for timestamp comparison
           // HH:MM format to Date
           const peakTime = new Date();
-          const [hours, minutes] = peak.time.split(':').map(Number);
-          peakTime.setHours(hours, minutes, 0, 0);
+          const peakMinutes = safeGetMinutes(peak.time);
+          peakTime.setHours(Math.floor(peakMinutes / 60), peakMinutes % 60, 0, 0);
           
           // Get time window around peak (default 2 minutes before and after)
           const { startTime, endTime } = getTimeWindowAroundEvent(peakTime);
@@ -338,8 +339,8 @@ export const useGraphConfiguration = ({
         try {
           // Convert time string to Date object
           const dropTime = new Date();
-          const [hours, minutes] = drop.time.split(':').map(Number);
-          dropTime.setHours(hours, minutes, 0, 0);
+          const dropMinutes = safeGetMinutes(drop.time);
+          dropTime.setHours(Math.floor(dropMinutes / 60), dropMinutes % 60, 0, 0);
           
           // Get time window around drop
           const { startTime, endTime } = getTimeWindowAroundEvent(dropTime);

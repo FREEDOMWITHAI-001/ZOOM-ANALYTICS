@@ -62,11 +62,20 @@ useEffect(() => {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // Extract start HH:MM from range format "HH:MM-HH:MM" or plain "HH:MM"
+ const extractStartTime = (time: string): string => {
+  if (!time) return "";
+  const rangeMatch = time.match(/^(\d{1,2}:\d{2})\s*[-–]/);
+  if (rangeMatch) return rangeMatch[1];
+  return time;
+};
+
   // Normalize time format
  const normalizeTime = (time: string): string => {
   if (!time) return "";
+  const start = extractStartTime(time);
 
-  const parts = time.split(":").map(p => p.trim());
+  const parts = start.split(":").map(p => p.trim());
 
   if (parts.length === 2) {
     const mm = parts[0].padStart(2, "0");
@@ -78,14 +87,12 @@ useEffect(() => {
 };
 
 const getTranscriptContext = (time: string) => {
-  console.log("getTranscriptContext CALLED for:", time);
-
   if (!transcriptSegments || transcriptSegments.length === 0) {
-    console.log("No transcriptSegments available");
     return "";
   }
 
-  const [mm, ss] = time.split(":").map(Number);
+  const start = extractStartTime(time);
+  const [mm, ss] = start.split(":").map(Number);
   const targetSeconds = mm * 60 + ss;
 
   const fromSeconds = Math.max(0, targetSeconds - 600);

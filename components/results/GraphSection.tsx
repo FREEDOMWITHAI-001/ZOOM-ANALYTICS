@@ -101,30 +101,6 @@ onTranscriptReady?.(parsedSegments);
         }
       }
 
-      // STEP 2: Try the simple endpoint as fallback
-      const simpleResponse = await fetch(`/api/transcript-simple/${meetingId}`);
-
-      if (simpleResponse.ok) {
-        const simpleData = await simpleResponse.json();
-
-        if (simpleData.success && simpleData.download_url) {
-          // Try to download from the URL
-          const downloadResponse = await fetch(simpleData.download_url);
-          if (downloadResponse.ok) {
-            const content = await downloadResponse.text();
-            const parsedSegments = parseVTTContent(content);
-            setRealTranscriptSegments(parsedSegments);
-
-// SEND TRANSCRIPT UP
-onTranscriptReady?.(parsedSegments);
-
-            setTranscriptError(null);
-            setIsLoadingTranscript(false);
-            return;
-          }
-        }
-      }
-
       // All strategies failed
       setTranscriptError("Transcript content is not available for this meeting.");
       setRealTranscriptSegments([]);

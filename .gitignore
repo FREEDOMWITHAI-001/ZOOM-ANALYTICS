@@ -6,3 +6,4 @@ node_modules/
 zoom-analytics/
 loom-videos/
 .DS_Store
+.vercel

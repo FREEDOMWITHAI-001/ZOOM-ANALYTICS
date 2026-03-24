@@ -1,0 +1,11 @@
+.next
+node_modules
+.env
+.env.local
+.claude
+zoom-analytics
+loom-videos
+.DS_Store
+*.png
+test-flow.mjs
+tsconfig.tsbuildinfo
