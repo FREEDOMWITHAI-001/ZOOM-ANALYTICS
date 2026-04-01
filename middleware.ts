@@ -15,11 +15,15 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public paths and Next.js internals / static assets
+  // Only treat the last segment's dot as a static file extension
+  const lastSegment = pathname.split('/').pop() || '';
+  const looksLikeStaticFile = lastSegment.includes('.') && !pathname.startsWith('/api/');
+
   if (
     isPublic(pathname) ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
-    pathname.includes('.')
+    looksLikeStaticFile
   ) {
     return NextResponse.next();
   }

@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import pool, { resolveDbClientName } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
@@ -17,12 +17,14 @@ export async function GET(
   }
 
   try {
+    const dbClientName = await resolveDbClientName(clientName);
+
     const result = await pool.query(
       `SELECT * FROM zoom_meeting_analytics
        WHERE meeting_id = $1 AND client_name = $2
        ORDER BY generated_at DESC NULLS LAST, id DESC
        LIMIT 1`,
-      [meetingId, clientName]
+      [meetingId, dbClientName]
     );
 
     if (result.rows.length === 0) {

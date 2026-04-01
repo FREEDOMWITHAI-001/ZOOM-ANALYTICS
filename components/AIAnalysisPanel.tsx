@@ -478,7 +478,7 @@ total_participants: totalAttendees
               </Button>
               {!analysisProgress && !hasCaptionData && (
                 <p className="mt-2 text-xs text-destructive">
-                "Transcript is not available for this meeting."
+                Transcript is missing for this meeting. Engagement data and attendance graph are still available above.
                 </p>
               )}
               {!analysisProgress && hasCaptionData && (

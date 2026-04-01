@@ -9,4 +9,16 @@ const pool = new Pool({
   max: 10,
 });
 
+/**
+ * Resolve the db_client_name used in zoom_meeting_analytics
+ * from the display client_name stored in the JWT / client_credentials.
+ */
+export async function resolveDbClientName(clientName: string): Promise<string> {
+  const result = await pool.query(
+    'SELECT db_client_name FROM client_credentials WHERE client_name = $1',
+    [clientName]
+  );
+  return result.rows[0]?.db_client_name || clientName;
+}
+
 export default pool;

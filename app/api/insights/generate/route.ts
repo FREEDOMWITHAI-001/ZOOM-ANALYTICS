@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCallerAIConfig, callAI } from '@/lib/ai-client';
+import { loadPrompts, renderPrompt, PROMPT_KEYS } from '@/lib/prompts';
 
-function buildPrompt(type: string, item: any): string {
+function buildPrompt(
+  type: string,
+  item: any,
+  promptWithContext: string,
+  promptNoContext: string,
+): string {
   let rawTime = String(item.timeInterval || item.time || '').trim();
   let time = rawTime;
   if (/^\d{1,2}:\d{1,2}$/.test(rawTime)) {
@@ -9,31 +15,29 @@ function buildPrompt(type: string, item: any): string {
     time = `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
   }
 
-  const count = item.count || item.participants || 0;
-  const percentageChange = item.percentageChange || item.percentage_change || item.change || 0;
+  const count = String(item.count || item.participants || 0);
+  const percentageChange = String(item.percentageChange || item.percentage_change || item.change || 0);
   const transcriptContext = String(item.transcriptContext || '');
   const changeType = type === 'peak' ? 'increased' : 'decreased';
 
   if (!transcriptContext || transcriptContext.trim().length < 20) {
-    return (
-      'ROLE\nYou analyze webinar engagement changes.\n\n' +
-      'TASK\nWrite EXACTLY ONE sentence.\n\n' +
-      'HARD RULES\n- Transcript is insufficient to determine a cause.\n- Do NOT speculate.\n\n' +
-      'OUTPUT\nReturn ONLY this sentence:\n' +
-      `"At ${time}, engagement ${type === 'peak' ? 'increased' : 'decreased'} (${percentageChange}%, ${count} participants), but the transcript does not contain enough spoken context to identify a specific cause."`
-    );
+    return renderPrompt(promptNoContext, {
+      type,
+      time,
+      count,
+      percentageChange,
+      changeType,
+    });
   }
 
-  return (
-    `ROLE\nYou analyze webinar engagement changes using spoken transcript context.\n\n` +
-    `TASK\nWrite EXACTLY ONE professional sentence explaining why engagement ${changeType} at ${time}.\n\n` +
-    `TRANSCRIPT CONTEXT (ONLY words spoken in the previous 10 minutes — this is the ONLY evidence you may use)\n"${transcriptContext}"\n\n` +
-    `HARD RULES (MANDATORY)\n- Use ONLY the transcript words above as evidence.\n- Do NOT infer slides, polls, Q&A, or external events.\n- Do NOT infer tone unless explicitly visible in wording.\n- If no clear cause exists in text, say so.\n\n` +
-    `OUTPUT KEY MUST BE EXACTLY: ${type}-${time}\n\n` +
-    `Return STRICT JSON only in this format:\n{ "${type}-${time}": "sentence" }\n\n` +
-    `DATA\nTime: ${time}\nParticipants: ${count}\nChange: ${percentageChange}%\n\n` +
-    `Return ONLY the sentence.`
-  );
+  return renderPrompt(promptWithContext, {
+    type,
+    time,
+    count,
+    percentageChange,
+    changeType,
+    transcriptContext,
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -52,10 +56,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'AI provider not configured for this account' }, { status: 400 });
     }
 
+    const prompts = await loadPrompts();
+    const promptWithContext = prompts[PROMPT_KEYS.INSIGHT_WITH_CONTEXT];
+    const promptNoContext = prompts[PROMPT_KEYS.INSIGHT_NO_CONTEXT];
+
     const results = await Promise.all(
       allItems.map(async (item) => {
         const type = item._type;
-        const prompt = buildPrompt(type, item);
+        const prompt = buildPrompt(type, item, promptWithContext, promptNoContext);
 
         try {
           let content = await callAI(aiConfig, prompt);

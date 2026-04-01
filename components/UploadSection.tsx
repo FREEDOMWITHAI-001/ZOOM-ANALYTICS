@@ -486,9 +486,9 @@ const UploadSection = ({
                           <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${
                             recording.status === 'COMPLETED'
                               ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                           }`}>
-                            {recording.status === 'COMPLETED' ? 'AI Ready' : 'Processing AI...'}
+                            {recording.status === 'COMPLETED' ? 'AI Ready' : 'Transcript Missing'}
                           </span>
                         </div>
                         <div className="text-sm text-muted-foreground">
@@ -517,9 +517,9 @@ const UploadSection = ({
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     selectedRecording.status === 'COMPLETED'
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                      : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                   }`}>
-                    {selectedRecording.status === 'COMPLETED' ? 'AI Ready' : 'Processing AI...'}
+                    {selectedRecording.status === 'COMPLETED' ? 'AI Ready' : 'Transcript Missing'}
                   </span>
                 </div>
 
@@ -544,6 +544,11 @@ const UploadSection = ({
                     <div>{formatDate(selectedRecording.start_time)}</div>
                   </div>
                 </div>
+                {selectedRecording.status !== 'COMPLETED' && (
+                  <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
+                    Transcript not available — engagement data and attendance graph are still viewable.
+                  </p>
+                )}
               </motion.div>
             )}
           </div>

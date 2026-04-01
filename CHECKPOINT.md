@@ -121,6 +121,89 @@ The window aggregation module (`lib/csv/window-aggregation.ts`) produces time la
 - No client-side errors, no network errors
 - Direct user login
 
+## Phase 8 — Fix Misleading "Processing AI" Status for Harsh Client (Mar 27, 2026)
+
+**Issue:** Harsh's client reported that all meetings showed "Processing AI..." but no data or AI insights were visible. The client was confused thinking the system was still working.
+
+**Root Cause:** 59 out of 60 meetings for Harsh (`connect@daveharsh.com`) had `status = TRANSCRIPT_PENDING` because transcripts were never ingested (likely Zoom transcription wasn't enabled). The UI displayed "Processing AI..." for any non-COMPLETED status, which was misleading — the engagement data (graphs, statistics, peaks/dropoffs) was fully available; only transcripts and AI analysis were missing.
+
+**Database findings:**
+- Only 1 meeting (`97008198124` — "My Meeting") had a transcript (4,340 chars) and AI analysis
+- 59 meetings had engagement graphs but no transcript and no AI analysis
+- 2 meetings were also stored with `client_name = 'Harsh'` instead of `connect@daveharsh.com` (minor data inconsistency, invisible to user via `resolveDbClientName`)
+
+**Files fixed:**
+
+1. **`components/UploadSection.tsx`**
+   - Changed recording dropdown badge: ~~"Processing AI..."~~ → **"Transcript Missing"** (orange color)
+   - Changed selected recording detail badge: same label update
+   - Added informational note below selected recording when transcript is missing: *"Transcript not available — engagement data and attendance graph are still viewable."*
+
+2. **`components/AIAnalysisPanel.tsx`**
+   - Updated disabled-button message: ~~"Transcript is not available for this meeting."~~ → **"Transcript is missing for this meeting. Engagement data and attendance graph are still available above."**
+
+3. **`next.config.js`**
+   - Re-added `output: 'standalone'` which was missing, causing Docker build failures (`/app/.next/standalone: not found`)
+
+**Verification:**
+- Docker build succeeded, deployed to localhost:8020
+- Recordings API returns 60 meetings (1 COMPLETED, 59 TRANSCRIPT_PENDING)
+- Analytics API returns engagement data for both meeting types
+- Built JS confirmed: "Transcript Missing" present, "Processing AI" fully removed
+- Admin impersonation → Harsh client flow tested end-to-end
+
+---
+
+## Phase 9 — Admin-Editable AI Prompts (Mar 30, 2026)
+
+**Issue:** All AI analysis prompts were hardcoded in the API route files, making it impossible to tweak prompt wording without a code change and redeployment.
+
+**Solution:** Built a full prompt management system — prompts are now stored in the database (`system_settings` table) and editable from a new "Prompts" tab in the admin panel.
+
+**New files:**
+
+1. **`lib/prompts.ts`** — Central prompt management module
+   - Defines 4 prompt keys: `segment_analysis`, `full_transcript`, `insight_with_context`, `insight_no_context`
+   - Stores default prompts (matching original hardcoded values) with template variables (`{{time}}`, `{{transcript}}`, etc.)
+   - `loadPrompts()` — loads from DB, falls back to defaults for any missing keys
+   - `savePrompts()` — persists to `system_settings` table (key: `ai_prompts`)
+   - `renderPrompt()` — replaces `{{variable}}` placeholders with runtime values
+   - `PROMPT_META` — label, description, and available variables per prompt (shown in admin UI)
+
+2. **`app/api/admin/prompts/route.ts`** — Admin API for prompt management
+   - `GET` — returns current prompts, defaults, and metadata
+   - `PUT` — saves updated prompts to database
+   - Protected by middleware (admin-only, `force-dynamic`)
+
+**Modified files:**
+
+3. **`app/api/ai/analyze-transcript/route.ts`** — Now calls `loadPrompts()` + `renderPrompt()` instead of building prompt string inline
+4. **`app/api/ai/analyze-full-transcript/route.ts`** — Same: loads prompt from DB, renders with `{{transcript}}`
+5. **`app/api/insights/generate/route.ts`** — Uses two DB-stored prompts (`insight_with_context` and `insight_no_context`), renders with `{{type}}`, `{{time}}`, `{{changeType}}`, `{{transcriptContext}}`, `{{count}}`, `{{percentageChange}}`
+6. **`app/admin/page.tsx`** — Added "Prompts" tab to admin dashboard:
+   - Accordion-style editors for all 4 AI prompts
+   - Template variable chips showing available variables per prompt
+   - "Modified" badge when a prompt differs from its default
+   - Per-prompt "Reset to Default" button
+   - Global "Reset All to Defaults", "Reload", and "Save All" buttons
+   - Character count display per prompt
+
+**Verification — Full test suite (local + production):**
+
+| Category | Tests | Result |
+|----------|-------|--------|
+| Health & auth flow | Login, /me, logout, invalid creds | All pass |
+| Middleware protection | Unauth→401, user→403 on admin, user→200 on normal | All pass |
+| Admin API (stats, clients, prompts) | GET/PUT prompts, client CRUD, impersonation | All pass |
+| AI endpoints with DB prompts | Segment analysis, full transcript, insights generate | All pass |
+| Custom prompt → AI uses it | Saved `rating` schema, AI returned `rating` field | Pass |
+| Restore defaults → AI uses defaults | Restored, AI returned `content_quality` schema | Pass |
+| Edge cases | Missing fields, short transcript, empty arrays, invalid payloads | All handled |
+| Frontend pages | Login, admin, main page, admin JS bundle contains prompts code | All pass |
+| Production (zoom-analytics-nu.vercel.app) | All above tests repeated on live deployment | All pass |
+
+**Deployment:** Vercel production at `https://zoom-analytics-nu.vercel.app` (scope: `sudarshans-projects-cb08fdb2`). Environment variables configured via `vercel env add` (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, JWT_SECRET, OPENAI_API_KEY).
+
 ---
 
 ## Current Architecture
@@ -129,7 +212,7 @@ The window aggregation module (`lib/csv/window-aggregation.ts`) produces time la
 app/
 ├── page.tsx                          # Main page (upload → results flow)
 ├── login/page.tsx                    # Login page
-├── admin/page.tsx                    # Admin dashboard (tabs: overview/clients/activity/workflow)
+├── admin/page.tsx                    # Admin dashboard (tabs: overview/clients/activity/workflow/prompts)
 ├── layout.tsx                        # Root layout with ThemeProvider
 └── api/
     ├── auth/login/route.ts           # POST — JWT login
@@ -150,6 +233,7 @@ app/
         ├── clients/[id]/route.ts                     # GET/PUT/DELETE — single client
         ├── clients/[id]/download-workflow/route.ts   # GET — workflow JSON
         ├── impersonate/route.ts                      # POST — admin impersonation
+        ├── prompts/route.ts                          # GET/PUT — AI prompt management
         ├── test-ai-key/route.ts                      # POST — validate AI key
         └── workflow-template/route.ts                # GET/PUT — workflow template
 
@@ -174,6 +258,7 @@ lib/
 ├── db.ts                             # PostgreSQL connection pool
 ├── auth.ts                           # JWT sign/verify (server-side)
 ├── auth-edge.ts                      # JWT verify (edge/middleware)
+├── prompts.ts                        # AI prompt defaults, DB load/save, template rendering
 ├── csv/
 │   ├── window-aggregation.ts         # Minute-level → N-minute bucket aggregation
 │   └── ...                           # CSV parsing utilities
